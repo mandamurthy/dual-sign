@@ -13,6 +13,8 @@ import {
 import CheckerTaskModal from "./CheckerTaskModal";
 import type { CheckerTask } from "./CheckerTaskModal";
 import { writeFile } from "../api/fileApi";
+import { postAuditLog } from "../api/auditLogApi";
+import { readFile } from "../api/fileApi";
 
 const getCheckerTasks = (): CheckerTask[] => {
   try {
@@ -50,7 +52,7 @@ const Checker: React.FC = () => {
     );
     setSnackbar({ open: true, message: "Diff view opened in new tab." });
   };
-  const handleApprove = (task: CheckerTask, comment: string) => {
+  const handleApprove = async (task: CheckerTask, comment: string) => {
     try {
       const key = `dualSignUpload_${task.file}_${task.versionLabel}`;
       const data = JSON.parse(localStorage.getItem(key) || "{}");
@@ -58,6 +60,8 @@ const Checker: React.FC = () => {
         writeFile(task.file, data.content);
       }
       updateTaskStatus(task, "Approved", comment);
+      // --- Audit log integration ---
+      await logAuditEvent(task, comment, "Approved");
       setSnackbar({
         open: true,
         message: "Version approved and file replaced.",
@@ -73,7 +77,7 @@ const Checker: React.FC = () => {
     updateTaskStatus(task, "Rejected", comment);
     setSnackbar({ open: true, message: "Version rejected." });
   };
-  const handleApproveSubmit = (task: CheckerTask, comment: string) => {
+  const handleApproveSubmit = async (task: CheckerTask, comment: string) => {
     try {
       const key = `dualSignUpload_${task.file}_${task.versionLabel}`;
       const data = JSON.parse(localStorage.getItem(key) || "{}");
@@ -106,6 +110,8 @@ const Checker: React.FC = () => {
             "Approved, file replaced, but product info not found for submit file.",
         });
       }
+      // --- Audit log integration ---
+      await logAuditEvent(task, comment, "Approved & Submitted");
     } catch (e) {
       setSnackbar({
         open: true,
@@ -125,6 +131,163 @@ const Checker: React.FC = () => {
     setTasks(updated);
     setSelectedTask(null);
   };
+
+  // Helper to log audit event after approval
+  async function logAuditEvent(
+    task: CheckerTask,
+    checkerComment: string,
+    checkAction: string
+  ) {
+    try {
+      // Get product and project info
+      const products = JSON.parse(
+        localStorage.getItem("dualSignProducts") || "[]"
+      );
+      // Normalize slashes for comparison
+      const normalize = (p: string) => p.replace(/\\/g, "/");
+      const productIndex = products.findIndex((p: any) =>
+        normalize(task.file).startsWith(normalize(p.path))
+      );
+      const product = products.find((p: any) =>
+        normalize(task.file).startsWith(normalize(p.path))
+      );
+      if (!product) {
+        setSnackbar({
+          open: true,
+          message: "No product found for file. Please contact support.",
+        });
+        return;
+      }
+      if (!("project" in product)) {
+        setSnackbar({
+          open: true,
+          message:
+            "Product info missing 'project' property. Please contact support.",
+        });
+        return;
+      }
+      if (product.project == null) {
+        setSnackbar({
+          open: true,
+          message:
+            "Product 'project' property is missing. Please contact support.",
+        });
+        return;
+      }
+      if (
+        typeof product.project !== "string" ||
+        !product.project.includes("|")
+      ) {
+        setSnackbar({
+          open: true,
+          message:
+            "Product 'project' property is invalid. Please contact support.",
+        });
+        return;
+      }
+      let projectName = "";
+      let environment = "";
+      try {
+        [projectName, environment] = product.project
+          .split("|")
+          .map((s: string) => s.trim());
+      } catch (splitErr) {
+        setSnackbar({
+          open: true,
+          message: "Error processing product info. Please contact support.",
+        });
+        return;
+      }
+      const projectsRaw = localStorage.getItem("dualSignProjects");
+      let projects: any[] = [];
+      try {
+        projects = JSON.parse(projectsRaw || "[]");
+        if (!Array.isArray(projects)) {
+          setSnackbar({
+            open: true,
+            message: "Project info is invalid. Please contact support.",
+          });
+          return;
+        }
+      } catch (parseErr) {
+        setSnackbar({
+          open: true,
+          message: "Error loading project info. Please contact support.",
+        });
+        return;
+      }
+      const project = projects.find(
+        (p: any) => p.name === projectName && p.environment === environment
+      );
+      if (!project) {
+        setSnackbar({
+          open: true,
+          message: "No project found for this file. Please contact support.",
+        });
+        return;
+      }
+      // Get previous (current) file content for diff
+      let prevContent = "";
+      try {
+        prevContent = await readFile(task.file);
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: "Could not read previous file version.",
+        });
+      }
+      const newContent = task.content;
+      // Simple line diff (CSV): show lines added/removed
+      let diffText = "";
+      const safePrevContent = prevContent || "";
+      const safeNewContent = newContent || "";
+      if (safePrevContent !== safeNewContent) {
+        const prevLines = safePrevContent.split("\n");
+        const newLines = safeNewContent.split("\n");
+        const added = newLines.filter((l) => !prevLines.includes(l));
+        const removed = prevLines.filter((l) => !newLines.includes(l));
+        diffText = [
+          ...added.map((l) => "+ " + l),
+          ...removed.map((l) => "- " + l),
+        ].join("\n");
+      } else {
+        diffText = "NO_DIFF";
+      }
+      const payload = {
+        auditPath: project.auditPath,
+        auditCaptureApproach: project.auditCaptureApproach,
+        projectName,
+        environment,
+        fileName: task.file,
+        maker: task.maker,
+        makerComment: task.makerComment || "",
+        checker: "Checker", // TODO: Replace with real user/session
+        checkerComment,
+        checkAction,
+        diffText,
+        auditRetentionDays: project.auditRetentionDays,
+        timestamp: new Date().toISOString(),
+      };
+      try {
+        await postAuditLog(payload);
+        setSnackbar({
+          open: true,
+          message: "Audit log recorded.",
+        });
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: "Audit log failed. Please contact support.",
+        });
+      }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Audit log failed: " + (err as Error).message,
+      });
+      // Removed debug output for production
+    }
+  }
 
   return (
     <Box

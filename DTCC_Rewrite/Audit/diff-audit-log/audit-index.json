@@ -1,0 +1,32 @@
+[
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-14T04-19-44-511Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "2025-06-14T04:19:44.511Z",
+    "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-14T04-24-13-257Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "2025-06-14T04:24:13.257Z",
+    "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-14T04-28-36-955Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "2025-06-14T04:28:36.955Z",
+    "check_action": "Approved"
+  }
+]

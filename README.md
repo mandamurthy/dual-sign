@@ -4,69 +4,54 @@ A modern, robust React-based web application for user onboarding, environment/pr
 
 ## Features
 
-### Completed (as of June 8, 2025)
+### Completed (as of June 14, 2025)
 
 - **Project Scaffold**: Vite + React + TypeScript.
 - **Material-UI Integration**: Modern, responsive UI.
 - **Sidebar Navigation**: With icons for each feature.
-- **User Onboarding**:
-  - Add users, assign to multiple environments and roles.
-  - Edit and delete users.
-  - Data persists in localStorage and syncs across navigation/tabs.
-  - UI split into "Add User" and "User List" frames, side by side, with proper alignment and no overlap.
-- **Environment Onboarding**:
-  - Add, edit, and delete environments.
-  - Data persists in localStorage and syncs across navigation/tabs.
-- **Project Onboarding**:
-  - Add new projects with Project Name and Environment.
-  - List all onboarded projects in a separate frame.
-  - Add new products with Project Name (dropdown: "ProjectName | Environment"), Product Name, File Path (as hyperlink with copy button), and File Pattern.
-  - List all products in a separate frame, with clean layout and truncated/copyable file paths.
-  - All onboarding frames are centered and have fixed min/max widths for clean layout.
-- **Maker-Checker Process**:
-  - Role, Project, Environment, Product dropdowns are on a single line, spaced and non-overlapping.
-  - File listing for selected product, showing real files from workspace folders matching the configured pattern.
-  - File names left-aligned, action buttons (Download, Upload, Display Versions) right-aligned for each file.
-  - **Restore To Version** button and functionality have been removed from the Maker-Checker UI (June 8, 2025).
-  - Frame dynamically resizes and is left-aligned for a professional look.
-- **Display Versions Modal**:
-  - Lists all versions (workspace and uploaded), with actions for View Diff, Download, Replace, Drop Version.
-  - **Send To Checker** button added for each non-current version (currently disabled; will be enabled with approval workflow).
-  - All actions have confirmation dialogs where appropriate.
-- **Diff View**: Modern, user-friendly CSV diff with column selection, sorting, and record filtering. Cell-level diff highlighting (including quoted values).
-- **Versioning**: Each upload creates a new version (v1, v2, ...), never overwriting previous uploads. All versions are listed in a modal with metadata.
-- **Download Naming**: Downloaded versioned files include version and upload timestamp in the filename.
-- **Replace (Simulated)**: Replacing a version updates the simulated workspace file in localStorage, which is used for all future diff and download actions.
-- **UI Consistency**: All action buttons in the modal and main page have a consistent, modern outlined style.
-- **Snackbar Feedback**: Uploads and actions provide clear feedback, including a working View Diff link.
-- **Audit Trail**: Dedicated tab, visible to all users, showing all audit events.
-- **README.md**:
-  - Updated to reflect project renaming, structure, implementation approach, and current status (as of June 8, 2025).
+- **User Onboarding**: Add/edit/delete users, assign to environments and roles. Data persists in localStorage.
+- **Environment Onboarding**: Add/edit/delete environments. Data persists in localStorage.
+- **Project Onboarding**: Add projects and products, including Retention Days, Audit Path, and Audit Capture Approach. Product onboarding supports Product Submit File Prefix and file pattern matching.
+- **Maker-Checker Process**: Full file versioning, diff, approval/reject, and submission flows. Only one version can be under review at a time. All actions require comments and provide clear feedback.
+- **Checker Tab**: Modern modal for review (View Diff, Download, Approve, Reject, Approve & Submit). Status and comments are shown in both Maker and Checker UIs.
+- **Audit Logging**: Robust, production-grade audit logging on backend after Checker approval. Audit logs are reliably created in correct folder structure, with all required metadata and diff. Audit logs are immutable and write-once.
+- **Audit Log Viewer**: Modern UI for viewing audit logs, with filtering by project, file, maker, checker, action, and date. Full details and diff viewer for each log entry. Download/export option for JSON logs.
+- **Audit Log Index**: Fast lookup via audit-index.json. All audit log writes update the index for scalable search.
+- **Retention/Cleanup**: Audit logs are cleaned up based on retention days per project.
+- **All debug output removed for production. Only user-facing error messages remain.**
 
 ## Pending / Next Steps
 
-- Implement approval/reject workflow for checker, with status tracking and integration with the new 'Send To Checker' and 'Replace' actions.
-- Wire up 'Send To Checker' button to initiate the approval process (currently disabled placeholder).
-- Log all actions (upload, replace, drop, approve, reject) and display in a dedicated Audit Trail tab.
-- Add backend/API integration for real file system access (currently, file listing works for workspace folders only; remote/server folders will require backend support).
-- Add authentication and user session management.
-- Advanced validation, error handling, and accessibility improvements.
-- Further UI/UX refinements as needed.
-- Update documentation as new features are added.
+- **Pending verification on Audit displayed on UI.**
+- **Pagination addition is pending.**
+- **Elastic search integration is pending.**
+- **Access control is pending.**
+- **Moving away from local storage is pending for all tabs.**
+  - All data (users, environments, projects, products, tasks, audit logs) should be loaded from and written to backend APIs, not localStorage.
+- **Product path is currently hardcoded.**
+  - The same path is used if a new project or product is onboarded. This needs to be adjusted so each product/project can have a unique path.
+- **Further workflow automation and audit trail improvements as needed.**
+- **Add authentication and user session management.**
+- **Advanced validation, error handling, and accessibility improvements.**
+- **Further UI/UX refinements as needed.**
+- **Update documentation as new features are added.**
 
 ## How to Resume
 
-- Start with the Maker-Checker process: connect file management to onboarded projects/products, add approval/rejection, and audit trail.
-- Add audit/compliance logging for all onboarding and file actions.
-- Plan for authentication and backend integration if moving beyond localStorage.
+- Start with backend API integration for all tabs (move away from localStorage).
+- Add pagination and ElasticSearch for scalable audit log search.
+- Implement access control for the Audit tab and all sensitive actions.
+- Fix product path logic so each product/project has a unique, correct path.
+- Add authentication and user session management.
+- Continue to verify and improve audit log display and compliance features.
 
 ---
 
-_Last updated: June 8, 2025_
+_Last updated: June 14, 2025_
 
 # Dual Sign Maker-Checker Workflow
 
-## Status as of June 8, 2025
+## Status as of June 14, 2025
 
 ### Completed Features
 

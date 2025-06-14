@@ -48,6 +48,7 @@ app.get('/api/stat', (req, res) => {
 
 // API to write audit log (called after checker approves)
 app.post('/api/audit-log', (req, res) => {
+  console.log('[AuditLog][DEBUG][BACKEND] Received payload:', req.body);
   try {
     const {
       auditPath,
@@ -65,6 +66,17 @@ app.post('/api/audit-log', (req, res) => {
       timestamp
     } = req.body;
     if (!auditPath || !auditCaptureApproach || !projectName || !environment || !fileName || !maker || !checker || !checkAction || !diffText) {
+      console.error('[AuditLog][DEBUG][BACKEND] Missing required fields:', {
+        auditPath,
+        auditCaptureApproach,
+        projectName,
+        environment,
+        fileName,
+        maker,
+        checker,
+        checkAction,
+        diffText
+      });
       return res.status(400).send('Missing required fields');
     }
     writeAuditLog({

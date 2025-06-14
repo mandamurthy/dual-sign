@@ -53,6 +53,10 @@ const ProjectOnboarding: React.FC = () => {
   });
   const [editProjectIdx, setEditProjectIdx] = useState<number | null>(null);
   const [editProductIdx, setEditProductIdx] = useState<number | null>(null);
+  const [auditPath, setAuditPath] = useState("");
+  const [auditCaptureApproach, setAuditCaptureApproach] = useState("");
+  const [auditRetentionDays, setAuditRetentionDays] = useState(14);
+  const auditApproachOptions = ["Date", "ProductName"];
 
   // Sync environments and projects on storage/focus
   React.useEffect(() => {
@@ -75,6 +79,14 @@ const ProjectOnboarding: React.FC = () => {
       setError("Project name and environment are required.");
       return;
     }
+    if (!auditPath.trim()) {
+      setError("Audit Path is required.");
+      return;
+    }
+    if (!auditCaptureApproach) {
+      setError("Audit Capture Approach is required.");
+      return;
+    }
     if (
       projects.some(
         (p, idx) =>
@@ -91,6 +103,9 @@ const ProjectOnboarding: React.FC = () => {
       updated[editProjectIdx] = {
         name: projectName.trim(),
         environment: projectEnv,
+        auditPath: auditPath.trim(),
+        auditCaptureApproach,
+        auditRetentionDays,
       };
       setProjects(updated);
       localStorage.setItem("dualSignProjects", JSON.stringify(updated));
@@ -98,18 +113,30 @@ const ProjectOnboarding: React.FC = () => {
     } else {
       const newProjects = [
         ...projects,
-        { name: projectName.trim(), environment: projectEnv },
+        {
+          name: projectName.trim(),
+          environment: projectEnv,
+          auditPath: auditPath.trim(),
+          auditCaptureApproach,
+          auditRetentionDays,
+        },
       ];
       setProjects(newProjects);
       localStorage.setItem("dualSignProjects", JSON.stringify(newProjects));
     }
     setProjectName("");
     setProjectEnv("");
+    setAuditPath("");
+    setAuditCaptureApproach("");
+    setAuditRetentionDays(14);
     setError("");
   };
   const handleEditProject = (idx: number) => {
     setProjectName(projects[idx].name);
     setProjectEnv(projects[idx].environment);
+    setAuditPath(projects[idx].auditPath || "");
+    setAuditCaptureApproach(projects[idx].auditCaptureApproach || "");
+    setAuditRetentionDays(projects[idx].auditRetentionDays || 14);
     setEditProjectIdx(idx);
     setError("");
   };
@@ -277,6 +304,40 @@ const ProjectOnboarding: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            label="Audit Path"
+            value={auditPath}
+            onChange={(e) => setAuditPath(e.target.value)}
+            required
+          />
+          <FormControl fullWidth required sx={{ minWidth: 200, maxWidth: 400 }}>
+            <InputLabel id="audit-capture-approach-label">
+              Audit Capture Approach
+            </InputLabel>
+            <Select
+              labelId="audit-capture-approach-label"
+              value={auditCaptureApproach}
+              label="Audit Capture Approach"
+              onChange={(e) => setAuditCaptureApproach(e.target.value)}
+            >
+              {auditApproachOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth required sx={{ minWidth: 200, maxWidth: 400 }}>
+            <TextField
+              label="Audit Retention Days"
+              type="number"
+              value={auditRetentionDays}
+              onChange={(e) => setAuditRetentionDays(Number(e.target.value))}
+              inputProps={{ min: 1 }}
+              required
+              helperText="How long to retain audit logs (days)"
+            />
+          </FormControl>
           <Box display="flex" gap={2}>
             <Button type="submit" variant="contained" color="primary">
               {editProjectIdx !== null ? "Update Project" : "Add Project"}
@@ -289,6 +350,9 @@ const ProjectOnboarding: React.FC = () => {
                   setEditProjectIdx(null);
                   setProjectName("");
                   setProjectEnv("");
+                  setAuditPath("");
+                  setAuditCaptureApproach("");
+                  setAuditRetentionDays(14);
                   setError("");
                 }}
               >
@@ -315,32 +379,78 @@ const ProjectOnboarding: React.FC = () => {
         </Typography>
         <List sx={{ width: "100%" }}>
           {projects.map((proj, idx) => (
-            <ListItem
-              key={idx}
-              divider
-              secondaryAction={
-                <Stack direction="row" spacing={1}>
+            <ListItem key={idx} divider>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                width="100%"
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography fontWeight={600}>{proj.name}</Typography>
                   <IconButton
                     edge="end"
                     aria-label="edit"
+                    size="small"
                     onClick={() => handleEditProject(idx)}
                   >
-                    <EditIcon />
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     edge="end"
                     aria-label="delete"
+                    size="small"
                     onClick={() => handleDeleteProject(idx)}
                   >
-                    <DeleteIcon />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
-                </Stack>
-              }
-            >
-              <ListItemText
-                primary={proj.name}
-                secondary={`Environment: ${proj.environment}`}
-              />
+                </Box>
+                <ListItemText
+                  primary={null}
+                  secondary={
+                    <>
+                      <div>Environment: {proj.environment}</div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        Audit Path:{" "}
+                        <a
+                          href={proj.auditPath}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ wordBreak: "break-all" }}
+                        >
+                          {proj.auditPath && proj.auditPath.length > 30
+                            ? proj.auditPath.slice(0, 20) + "..."
+                            : proj.auditPath || "-"}
+                        </a>
+                        <Button
+                          size="small"
+                          sx={{ minWidth: 0, ml: 1 }}
+                          onClick={() =>
+                            navigator.clipboard.writeText(proj.auditPath || "")
+                          }
+                          title="Copy path"
+                        >
+                          <ContentCopyIcon fontSize="small" />
+                        </Button>
+                      </div>
+                      <div>
+                        Audit Capture: {proj.auditCaptureApproach || "-"}
+                      </div>
+                      <div>
+                        Audit Retention Days: {proj.auditRetentionDays || 14}{" "}
+                        days
+                      </div>
+                    </>
+                  }
+                  sx={{ pr: 2 }}
+                />
+              </Box>
             </ListItem>
           ))}
         </List>
@@ -457,32 +567,41 @@ const ProjectOnboarding: React.FC = () => {
         </Typography>
         <List sx={{ width: "100%" }}>
           {products.map((prod, idx) => (
-            <ListItem
-              key={idx}
-              divider
-              secondaryAction={
-                <Stack direction="row" spacing={1}>
+            <ListItem key={idx} divider>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                width="100%"
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography fontWeight={600}>{prod.name}</Typography>
                   <IconButton
                     edge="end"
                     aria-label="edit"
+                    size="small"
                     onClick={() => handleEditProduct(idx)}
                   >
-                    <EditIcon />
+                    <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     edge="end"
                     aria-label="delete"
+                    size="small"
                     onClick={() => handleDeleteProduct(idx)}
                   >
-                    <DeleteIcon />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
-                </Stack>
-              }
-            >
-              <ListItemText
-                primary={`${prod.name} (${prod.project})`}
-                secondary={
-                  <>
+                </Box>
+                <Box textAlign="center" minWidth={0} flex={1} ml={2}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      justifyContent: "center",
+                    }}
+                  >
                     Path:{" "}
                     <a
                       href={prod.path}
@@ -502,10 +621,11 @@ const ProjectOnboarding: React.FC = () => {
                     >
                       <ContentCopyIcon fontSize="small" />
                     </Button>
-                    {" | Pattern: " + prod.pattern}
-                  </>
-                }
-              />
+                  </div>
+                  <div>Pattern: {prod.pattern}</div>
+                  <div>Project: {prod.project}</div>
+                </Box>
+              </Box>
             </ListItem>
           ))}
         </List>
