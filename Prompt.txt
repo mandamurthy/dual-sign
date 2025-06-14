@@ -1,0 +1,55 @@
+Hi 
+
+Go through below and provide me the ReadMe markdown file. Also include the project structure details along with other. 
+Do not initiate the implementation until we are good and agreed with the mark down file provided to me.
+===========================
+
+You are a propfessional high experience techie in React JS.
+lets kick start to create a project using React JS. Here are the details.
+
+1. The project is to create a user interface which will be used by Operational user team on daily basis
+2. The user web interface should be having the modern feel / look.
+3. The UI provides features such as 	
+	a. User onboarding and user roles (such as roles related to Admin, Developer, Tester, Maker, Checker, ReadOnly, SuperUser). Map the roles for each user onboarded.
+	b. Onboarding the new environment. Consider there will be muiltiple environments such as Devlopment, SIT, UAT, DR and Production. The code or logic or parameters should be environment friendly to configure and use.
+
+4. This UI servers to operational u4ers by providing functionality of the Maker and Checker processes. 
+	4.1 Maker :
+	Once the Maker select a date value from the date dropdown , the files which are available in the particular folder wil be displayed. 
+	Beneath to the each file displayed, multiple buttons (maker choose to click) will be shown. These buttons are "Download", "Upload", "Display Versions","Download Specific Version", "Restore To Version". The details are listed in the section 4.3.
+
+	4.2 Checker :
+	Changes on the file which were done by the Maker will be reviewed by Checker and approves the changes performed by Maker.
+	Checker TaskList to have the list of Tasks that are pending for approval.
+	Once the cheker open the task list and further open the task that need to be approved, beneath each file he need to approve the changes, these buttons to be shown. These buttons are "Review Changes", "Approve", "Reject". The details are listed in the section 4.3.
+	
+	
+	4.3 Processes
+		4.3.1 "Download" --> Latest version file to be downloaded from folder to local PC.
+		4.3.2 "Upload" --> To upload a new version of file that the maker done the changes on the file. Once the file is uploaded, it need to trigger the checker approvals.
+		4.3.3 "Display Versions" --> Once clicked,a windows will pop up, it will display version names that are available for that particular file and date. It will also displayes the time when the version is uploaded. It will also showing the approval status done / awaiting from the checker. This will have integration feature of "Downloading Specific Version" and "Restore Specific Version".
+		4.3.4 "Download Specific Version" --> Users should be able to download any specific version displayed. 
+		4.3.5 "Restore To Specific Version" --> Users should be able to select the specific version. The selected version will be overwriting the file in the shared folder and considered as the latest new version.
+		4.3.6 "Review Changes" -->  Once clicked, the pop up window to be shown with the differences between the new version and the version available in the folder. 
+		If the user who invoked "Review Changes" is a checker, then a "Approve" or "Reject" to be made available.
+		4.3.7 "Approve" --> Once clicked, the changes are approved, this version of file will be replaced in the shared folder. A Done.txt file will be placed in the folder. This Done.txt file is a indicator for another application to consume the file for further processing.
+		4.3.8 "Reject" --> Once clicked, the changes done the Maker will be ignored and the comment for the particular rejected version will be tagged or remarked accordingly
+	
+5. The UI should be provide the audit features to track the changes done via any of the processes.
+6. The code to be designed in a best granular components so that it will be user friendly for the future changes / maintainence 
+7. The name of the UI is OTC-Workbench as it is providing a user workbench to handle the adjustments done by users on the files and auidting every change. The files mentioned here are related to financial organiztion who need to submit transaction data to Singapore MAS via DTCC.
+==========================
+
+8.
+As this OTC workbench will serve multiple reporting systems by catering the maker and checker process. It need to provide the features of onboarding of a "Project". While onboarding the sytstem, it should take the input such as
+	a. Project Name
+	b. Products --> this references to the product names (Like the file) which will undergo maker and checker process. It will have the file description.
+	c. Path --> path of the files which need to be go through maker and checker process.
+
+9. 	So, the process i am assuming would be first creating the roles. You may choose the best way to accomodate the onboarding and executioon of maker and checker process. 
+	creating a user and map to roles.
+	The roles and users will be different for each project. 
+	creating a project which will have multiple files under each project which will go through maker and checker process.
+	Next comes the maker and checkers processes will be done by users.
+
+10.	Also another point is the audit being done will be used by compliance as well. as the financial industries or regulations may require a maker-checker workflow for specific processes. 

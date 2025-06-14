@@ -1,0 +1,19 @@
+1. The "Upload" button appears next to each file in the list for the selected product, environment, and project.
+2. When a user clicks "Upload," they should be prompted to select a file from their local computer (using a file picker dialog).
+3. After selecting a file, the selected file should be placed in local storage. But should not replace the actual file in workspace. 
+4. While the file in the workspace is considered as v0. The selected file to upload which is placed in local storage should be considered as next version (vN). 
+5. The UI should not allow upload if no file is selected, and should handle errors gracefully.
+6. SnackBar
+	6.1 The upload action should trigger a snackbar notification for success or error. 
+	6.2 The snackbar also show the link to ViewDiff.
+	6.3 When click on ViewDiff, open a new tab which shows the differences between v0 (workspace file) and vN (new version that is uploaded) file content.
+	6.4 The diff of file content shown on new tab to have modern functionality. You may need to install more react libraries.
+		6.4.1 User can choose delimiter to use which he / she can input in a free text value. By default it will be comma. This delimiter value is common for v0 and vN.
+		6.4.2 The consolidated list of columns available in v0 and vN should be shown in the dropdownlist, where user choose what columns to be displayed in the diff view. By default, all columns will be shown on diff view.
+		6.4.3 Left view is v0 and right view is vN.
+		6.4.4 The data on the diff view should be shown in tabular format. The column header is the first row in the file content.
+		6.4.5 User should be able to sort the data based on the column Header. 
+		6.4.6 The differences (mismatch, whitepsaces etc) in content should be highlighted in respective standard colors.
+		6.4.7 User should be able to choose to display only 
+
+Note : As mentioned earlier, please use the granualar code implementation. I think you can keep the Upload and ViewDiff funcationality separate at the code level which will help to maintaince. Please note the ViewDiff functionality (for now we are triggering from SnackBar) will also be triggered in other future button implementation as well.
