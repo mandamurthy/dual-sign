@@ -190,24 +190,18 @@ Contributions are welcome! Please open issues or submit pull requests for improv
 To ensure a robust and maintainable build, follow this implementation order:
 
 1. **User Onboarding**
-
    - Implement user registration, authentication, and role assignment.
    - Set up role management (Admin, Developer, Tester, Maker, Checker, ReadOnly, SuperUser).
    - This is foundational, as all other features depend on user identity and permissions.
-
 2. **Environment Onboarding**
-
    - Build the ability to define and manage environments (Development, SIT, UAT, DR, Production).
    - Make sure environment selection/configuration is available for users and projects.
-
 3. **Project with Products/Files Onboarding**
-
    - Allow onboarding of new projects, including:
      - Project name
      - Products/files (with descriptions)
      - File paths
    - Map users and roles to specific projects.
-
 4. **Maker and Checker Process**
    - Implement the core Maker-Checker workflow:
      - File listing, versioning, upload/download, approval/rejection, audit trail.
@@ -217,7 +211,7 @@ To ensure a robust and maintainable build, follow this implementation order:
 
 ---
 
-## Current Status (as of June 4, 2025)
+## Current Status (as of June 14, 2025)
 
 - Project scaffolded with Vite + React + TypeScript.
 - Material-UI integrated for a modern, responsive UI.
@@ -236,6 +230,12 @@ To ensure a robust and maintainable build, follow this implementation order:
 
 ## Pending / Next Steps
 
+- Pending verification on Audit displayed on UI.
+- Pagination addition is pending.
+- ElasticSearch integration is pending.
+- Access control is pending.
+- Moving away from localStorage to backend API for all tabs is pending.
+- Product path logic is currently hardcoded and needs to be adjusted for unique paths per product/project.
 - Wire up file action buttons (Download, Upload, Display Versions, Restore To Version) in Maker-Checker tab.
 - Implement file versioning, approval/rejection, and Maker-Checker workflow logic.
 - Add backend/API integration for real file system access (currently, file listing works for workspace folders only; remote/server folders will require backend support).
@@ -246,4 +246,4 @@ To ensure a robust and maintainable build, follow this implementation order:
 
 ---
 
-_Last updated: June 4, 2025_
+_Last updated: June 14, 2025_
