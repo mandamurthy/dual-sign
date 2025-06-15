@@ -47,13 +47,14 @@ function getProjects() {
 const AuditTrail: React.FC = () => {
   const [auditIndex, setAuditIndex] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>(getProjects());
+  const today = new Date().toISOString().slice(0, 10);
   const [filter, setFilter] = useState({
     project: "",
     file: "",
     maker: "",
     checker: "",
     action: "",
-    date: "",
+    date: today, // Default to today's date
   });
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
   const [logDetails, setLogDetails] = useState<any | null>(null);
@@ -123,7 +124,7 @@ const AuditTrail: React.FC = () => {
     // @ts-ignore
     const cache = (window as any).auditLogExistenceCache;
     if (cache[logPath] === false) {
-      console.debug("[AuditTrail][DEBUG] File missing:", logPath);
+      // Removed debug output for production
       return false;
     }
     if (cache[logPath] === true) {
@@ -133,19 +134,12 @@ const AuditTrail: React.FC = () => {
       fetch(`/api/file?path=${encodeURIComponent(logPath)}`, { method: "GET" })
         .then((resp) => {
           cache[logPath] = resp.ok;
-          console.debug(
-            "[AuditTrail][DEBUG] API file existence checked:",
-            logPath,
-            resp.ok
-          );
+          // Removed debug output for production
           setCacheVersion((v) => v + 1); // force re-render
         })
         .catch(() => {
           cache[logPath] = false;
-          console.debug(
-            "[AuditTrail][DEBUG] API file existence checked (error):",
-            logPath
-          );
+          // Removed debug output for production
           setCacheVersion((v) => v + 1); // force re-render
         });
     }
@@ -397,40 +391,6 @@ const AuditTrail: React.FC = () => {
               </Button>
               <Button
                 onClick={() => {
-                  // Prepare CSV content
-                  const rows = [
-                    ["Field", "Value"],
-                    ["Project", logDetails.project_name],
-                    ["Environment", logDetails.environment],
-                    ["File", logDetails.file_name],
-                    ["Timestamp", logDetails.timestamp],
-                    ["Maker", logDetails.maker],
-                    ["Maker Comment", logDetails.maker_comment],
-                    ["Checker", logDetails.checker],
-                    ["Checker Comment", logDetails.checker_comment],
-                    ["Action", logDetails.check_action],
-                    ["Diff", logDetails.diff_text],
-                  ];
-                  const csv = rows
-                    .map((r) =>
-                      r
-                        .map((v) => '"' + String(v).replace(/"/g, '""') + '"')
-                        .join(",")
-                    )
-                    .join("\r\n");
-                  const blob = new Blob([csv], { type: "text/csv" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${logDetails.file_name || "audit-log"}.csv`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                Download CSV
-              </Button>
-              <Button
-                onClick={() => {
                   // Sheet 1: metadata except diff_text
                   const metaRows = [
                     ["Field", "Value"],
@@ -446,7 +406,7 @@ const AuditTrail: React.FC = () => {
                   ];
                   // Sheet 2: split diff text into lines
                   const diffLines = (logDetails.diff_text || "").split(/\r?\n/);
-                  const diffRows = diffLines.map((line) => [line]);
+                  const diffRows = diffLines.map((line: string) => [line]);
                   const wb = XLSX.utils.book_new();
                   const ws1 = XLSX.utils.aoa_to_sheet(metaRows);
                   const ws2 = XLSX.utils.aoa_to_sheet(diffRows);

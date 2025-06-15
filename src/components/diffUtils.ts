@@ -1,6 +1,13 @@
 import Papa from 'papaparse';
 import { readFile } from "../api/fileApi";
 
+// Helper to quote and escape CSV values
+function quoteCSV(val: string): string {
+  if (val == null) return '""';
+  const s = String(val);
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 // Utility to format audit log diff from Diff Viewer data
 export function formatAuditDiffFromViewer(
   diffRows: {
@@ -21,23 +28,23 @@ export function formatAuditDiffFromViewer(
   const allColumns = Array.from(new Set([...mustColumns, ...changedColumns]));
 
   // Header
-  const header = `Header,${allColumns.join(",")}^^${allColumns.join(",")}`;
+  const header = `Header,${allColumns.map(quoteCSV).join(",")}^^${allColumns.map(quoteCSV).join(",")}`;
 
   // Rows
   const rows = diffRows.map((row) => {
     const v0Vals = allColumns.map(
-      col => mustColumns.includes(col)
+      col => quoteCSV(mustColumns.includes(col)
         ? row.v0[col] ?? ""
         : row.changedCols.includes(col)
           ? row.v0[col] ?? ""
-          : "NoChange"
+          : "NoChange")
     );
     const vnVals = allColumns.map(
-      col => mustColumns.includes(col)
+      col => quoteCSV(mustColumns.includes(col)
         ? row.vn[col] ?? ""
         : row.changedCols.includes(col)
           ? row.vn[col] ?? ""
-          : "NoChange"
+          : "NoChange")
     );
     return `Row ${row.rowIndex + 1},${v0Vals.join(",")}^^${vnVals.join(",")}`;
   });
@@ -154,10 +161,10 @@ export function formatAuditDiffLines(
   columns: string[]
 ): string {
   if (!diffRows.length) return 'NO_DIFF';
-  const header = `Header,${columns.join(',')}^^${columns.join(',')}`;
+  const header = `Header,${columns.map(quoteCSV).join(',')}^^${columns.map(quoteCSV).join(',')}`;
   const rows = diffRows.map(row => {
-    const v0Vals = row.v0 ? row.v0.join(',') : Array(columns.length).fill('NoPrev').join(',');
-    const vnVals = row.vn ? row.vn.join(',') : Array(columns.length).fill('NoNew').join(',');
+    const v0Vals = row.v0 ? row.v0.map(quoteCSV).join(',') : Array(columns.length).fill('"NoPrev"').join(',');
+    const vnVals = row.vn ? row.vn.map(quoteCSV).join(',') : Array(columns.length).fill('"NoNew"').join(',');
     return `Row ${row.rowIndex + 1},${v0Vals}^^${vnVals}`;
   });
   return [header, ...rows].join('\n');

@@ -155,11 +155,7 @@ const Checker: React.FC = () => {
     checkAction: string,
     uploadedContent?: string
   ) {
-    console.debug("[AuditLog][DEBUG] logAuditEvent called", {
-      task,
-      checkerComment,
-      checkAction,
-    });
+    // Removed debug output for production
     try {
       // Get product and project info
       const products = JSON.parse(
@@ -167,9 +163,6 @@ const Checker: React.FC = () => {
       );
       // Normalize slashes for comparison
       const normalize = (p: string) => p.replace(/\\/g, "/");
-      const productIndex = products.findIndex((p: any) =>
-        normalize(task.file).startsWith(normalize(p.path))
-      );
       const product = products.find((p: any) =>
         normalize(task.file).startsWith(normalize(p.path))
       );
@@ -255,7 +248,6 @@ const Checker: React.FC = () => {
         const versioned = await getVersionedContentsForDiff(task);
         v0Content = versioned.v0Content;
         vNContent = versioned.vNContent;
-        console.debug("[AuditLog][DEBUG] v0Content before parsing:", v0Content);
       } catch (err) {
         setSnackbar({
           open: true,
@@ -275,44 +267,23 @@ const Checker: React.FC = () => {
         .split("|")
         .map((s: string) => s.trim())
         .filter(Boolean);
-      console.debug("[AuditLog][DEBUG] Before Diff Columns branch", {
-        auditLogGranularity,
-      });
       if (auditLogGranularity === "Diff Columns") {
-        console.debug("[AuditLog][DEBUG] Inside Diff Columns branch");
         let diffRows: any[] = [];
         if (
           typeof window !== "undefined" &&
           (window as any).getDiffRowsForAudit
         ) {
-          console.debug(
-            "[AuditLog][DEBUG] getDiffRowsForAudit is available on window"
-          );
           const v0Arr = parseCsvToArray(v0Content);
           const vnArr = parseCsvToArray(vNContent);
           const header = v0Arr[0] || vnArr[0] || [];
           const mustCols = mustColumns;
-          // Step 2 Debug: Log raw inputs to getDiffRowsForAudit
-          console.debug(
-            "[AuditLog][STEP2][DEBUG] getDiffRowsForAudit inputs:",
-            { v0Arr, vnArr, header, mustCols }
-          );
           diffRows = (window as any).getDiffRowsForAudit(
             v0Arr,
             vnArr,
             header,
             mustCols
           );
-        } else {
-          console.debug(
-            "[AuditLog][DEBUG] getDiffRowsForAudit is NOT available on window"
-          );
         }
-        // Step 1 Debug: Log captured Diff Viewer data
-        console.debug(
-          "[AuditLog][STEP1][DEBUG] Captured diffRows from Diff Viewer:",
-          diffRows
-        );
         diffText = formatAuditDiffFromViewer(diffRows, mustColumns);
       } else {
         // Diff Lines: show full row from both sides for changed rows using modular logic
@@ -359,7 +330,6 @@ const Checker: React.FC = () => {
         open: true,
         message: "Audit log failed: " + (err as Error).message,
       });
-      // Removed debug output for production
     }
   }
 
