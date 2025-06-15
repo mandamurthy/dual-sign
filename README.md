@@ -55,7 +55,7 @@ _Last updated: June 15, 2025_
 - Both Maker and Checker comments are visible in the workflow.
 - "Restore To Version" and "Replace" actions removed from Maker UI and code.
 - Product onboarding supports "Product Submit File Prefix" as a required field.
-- File pattern matching supports wildcards (e.g., *.csv, *City*).
+- File pattern matching supports wildcards (e.g., *.csv, *City\*).
 - "Submit" button in Maker modal creates a file named Product+ProductSubmitFilePrefix.txt in the product path, enabled only when Checker action is Approved. After submit, button is renamed "SUBMITTED" and disabled.
 - After Checker approves, the approved version is written to the product file path before status is updated.
 - "Approve & Submit" in Checker modal performs both: replaces the file in the product path and creates the submit file, with full feedback.
