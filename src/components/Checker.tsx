@@ -15,6 +15,13 @@ import type { CheckerTask } from "./CheckerTaskModal";
 import { writeFile } from "../api/fileApi";
 import { postAuditLog } from "../api/auditLogApi";
 import { readFile } from "../api/fileApi";
+import {
+  formatAuditDiffFromViewer,
+  parseCsvToArray,
+  getVersionedContentsForDiff,
+  getDiffRowsForLines,
+  formatAuditDiffLines,
+} from "./diffUtils";
 
 const getCheckerTasks = (): CheckerTask[] => {
   try {
@@ -53,15 +60,18 @@ const Checker: React.FC = () => {
     setSnackbar({ open: true, message: "Diff view opened in new tab." });
   };
   const handleApprove = async (task: CheckerTask, comment: string) => {
+    console.debug("[AuditLog][DEBUG] handleApprove called", { task, comment });
     try {
       const key = `dualSignUpload_${task.file}_${task.versionLabel}`;
       const data = JSON.parse(localStorage.getItem(key) || "{}");
+      let uploadedContent = data && data.content ? data.content : task.content;
+      // --- Audit log integration: log BEFORE replacing file ---
+      await logAuditEvent(task, comment, "Approved", uploadedContent);
+      // Now replace the file
       if (data && data.content) {
         writeFile(task.file, data.content);
       }
       updateTaskStatus(task, "Approved", comment);
-      // --- Audit log integration ---
-      await logAuditEvent(task, comment, "Approved");
       setSnackbar({
         open: true,
         message: "Version approved and file replaced.",
@@ -81,6 +91,7 @@ const Checker: React.FC = () => {
     try {
       const key = `dualSignUpload_${task.file}_${task.versionLabel}`;
       const data = JSON.parse(localStorage.getItem(key) || "{}");
+      let uploadedContent = data && data.content ? data.content : task.content;
       if (data && data.content) {
         writeFile(task.file, data.content);
       }
@@ -111,7 +122,12 @@ const Checker: React.FC = () => {
         });
       }
       // --- Audit log integration ---
-      await logAuditEvent(task, comment, "Approved & Submitted");
+      await logAuditEvent(
+        task,
+        comment,
+        "Approved & Submitted",
+        uploadedContent
+      );
     } catch (e) {
       setSnackbar({
         open: true,
@@ -136,8 +152,14 @@ const Checker: React.FC = () => {
   async function logAuditEvent(
     task: CheckerTask,
     checkerComment: string,
-    checkAction: string
+    checkAction: string,
+    uploadedContent?: string
   ) {
+    console.debug("[AuditLog][DEBUG] logAuditEvent called", {
+      task,
+      checkerComment,
+      checkAction,
+    });
     try {
       // Get product and project info
       const products = JSON.parse(
@@ -226,32 +248,84 @@ const Checker: React.FC = () => {
         });
         return;
       }
-      // Get previous (current) file content for diff
-      let prevContent = "";
+      // Get previous (current) and new (uploaded) file content for diff using shared utility
+      let v0Content = "";
+      let vNContent = "";
       try {
-        prevContent = await readFile(task.file);
+        const versioned = await getVersionedContentsForDiff(task);
+        v0Content = versioned.v0Content;
+        vNContent = versioned.vNContent;
+        console.debug("[AuditLog][DEBUG] v0Content before parsing:", v0Content);
       } catch (err) {
         setSnackbar({
           open: true,
-          message: "Could not read previous file version.",
+          message: "Could not load file versions for diff.",
         });
+        return;
       }
-      const newContent = task.content;
-      // Simple line diff (CSV): show lines added/removed
-      let diffText = "";
-      const safePrevContent = prevContent || "";
-      const safeNewContent = newContent || "";
-      if (safePrevContent !== safeNewContent) {
-        const prevLines = safePrevContent.split("\n");
-        const newLines = safeNewContent.split("\n");
-        const added = newLines.filter((l) => !prevLines.includes(l));
-        const removed = prevLines.filter((l) => !newLines.includes(l));
-        diffText = [
-          ...added.map((l) => "+ " + l),
-          ...removed.map((l) => "- " + l),
-        ].join("\n");
+      if (!v0Content) {
+        console.warn(
+          "[AuditLog][WARN] v0Content is empty. No previous version found."
+        );
+      }
+      // --- Enhanced diff logic based on Audit Log Granularity and Must Columns ---
+      let diffText = "NO_DIFF";
+      const auditLogGranularity = project?.auditLogGranularity || "Diff Lines";
+      const mustColumns = (product?.auditMustColumns || "")
+        .split("|")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      console.debug("[AuditLog][DEBUG] Before Diff Columns branch", {
+        auditLogGranularity,
+      });
+      if (auditLogGranularity === "Diff Columns") {
+        console.debug("[AuditLog][DEBUG] Inside Diff Columns branch");
+        let diffRows: any[] = [];
+        if (
+          typeof window !== "undefined" &&
+          (window as any).getDiffRowsForAudit
+        ) {
+          console.debug(
+            "[AuditLog][DEBUG] getDiffRowsForAudit is available on window"
+          );
+          const v0Arr = parseCsvToArray(v0Content);
+          const vnArr = parseCsvToArray(vNContent);
+          const header = v0Arr[0] || vnArr[0] || [];
+          const mustCols = mustColumns;
+          // Step 2 Debug: Log raw inputs to getDiffRowsForAudit
+          console.debug(
+            "[AuditLog][STEP2][DEBUG] getDiffRowsForAudit inputs:",
+            { v0Arr, vnArr, header, mustCols }
+          );
+          diffRows = (window as any).getDiffRowsForAudit(
+            v0Arr,
+            vnArr,
+            header,
+            mustCols
+          );
+        } else {
+          console.debug(
+            "[AuditLog][DEBUG] getDiffRowsForAudit is NOT available on window"
+          );
+        }
+        // Step 1 Debug: Log captured Diff Viewer data
+        console.debug(
+          "[AuditLog][STEP1][DEBUG] Captured diffRows from Diff Viewer:",
+          diffRows
+        );
+        diffText = formatAuditDiffFromViewer(diffRows, mustColumns);
       } else {
-        diffText = "NO_DIFF";
+        // Diff Lines: show full row from both sides for changed rows using modular logic
+        const v0Arr = parseCsvToArray(v0Content);
+        const vnArr = parseCsvToArray(vNContent);
+        const columns = v0Arr[0] || vnArr[0] || [];
+        const diffRows = getDiffRowsForLines(
+          v0Arr,
+          vnArr,
+          columns,
+          mustColumns
+        );
+        diffText = formatAuditDiffLines(diffRows, columns);
       }
       const payload = {
         auditPath: project.auditPath,

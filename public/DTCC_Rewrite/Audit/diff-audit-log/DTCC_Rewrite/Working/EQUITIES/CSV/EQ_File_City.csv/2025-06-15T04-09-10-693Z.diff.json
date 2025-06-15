@@ -1,0 +1,12 @@
+{
+  "project_name": "DTCC",
+  "environment": "DEV",
+  "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+  "timestamp": "2025-06-15T04:09:10.693Z",
+  "maker": "Maker",
+  "maker_comment": "dd",
+  "checker": "Checker",
+  "checker_comment": "dd",
+  "check_action": "Approved",
+  "diff_text": "Header,number,city,zip,street,suftyp,state^^number,city,zip,street,suftyp,state\nRow 2,380,Providence,02903,NoChange,NoChange,NoChange^^380,Providence,02904,NoChange,NoChange,NoChange\nRow 11,122,Greensburg,NoChange,NoChange,NoChange,NoChange^^1222,Greensburg,NoChange,NoChange,NoChange,NoChange\nRow 15,2221,Pottsville,NoChange,Market,NoChange,NoChange^^2221,Pottsville,NoChange,Markett,NoChange,NoChange\nRow 20,1480,Wytheville,NoChange,Main,NoChange,NoChange^^1480,Wytheville,NoChange,Mainn,NoChange,NoChange\nRow 28,115,Greenwood,NoChange,NoChange,Ct,NoChange^^115,Greenwood,NoChange,NoChange,Ctt,NoChange\nRow 37,602,South Bend,NoChange,NoChange,NoChange,IN^^602,South Bend,NoChange,NoChange,NoChange,INN\nRow 50,115,Grand Island,68803,NoChange,NoChange,NoChange^^115,Grand Island,688033,NoChange,NoChange,NoChange"
+}

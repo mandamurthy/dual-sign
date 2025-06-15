@@ -56,7 +56,10 @@ const ProjectOnboarding: React.FC = () => {
   const [auditPath, setAuditPath] = useState("");
   const [auditCaptureApproach, setAuditCaptureApproach] = useState("");
   const [auditRetentionDays, setAuditRetentionDays] = useState(14);
+  const [auditLogGranularity, setAuditLogGranularity] = useState("");
+  const [auditMustColumns, setAuditMustColumns] = useState("");
   const auditApproachOptions = ["Date", "ProductName"];
+  const auditGranularityOptions = ["Diff Lines", "Diff Columns"];
 
   // Sync environments and projects on storage/focus
   React.useEffect(() => {
@@ -87,6 +90,10 @@ const ProjectOnboarding: React.FC = () => {
       setError("Audit Capture Approach is required.");
       return;
     }
+    if (!auditLogGranularity) {
+      setError("Audit Log Granularity is required.");
+      return;
+    }
     if (
       projects.some(
         (p, idx) =>
@@ -106,6 +113,7 @@ const ProjectOnboarding: React.FC = () => {
         auditPath: auditPath.trim(),
         auditCaptureApproach,
         auditRetentionDays,
+        auditLogGranularity,
       };
       setProjects(updated);
       localStorage.setItem("dualSignProjects", JSON.stringify(updated));
@@ -119,6 +127,7 @@ const ProjectOnboarding: React.FC = () => {
           auditPath: auditPath.trim(),
           auditCaptureApproach,
           auditRetentionDays,
+          auditLogGranularity,
         },
       ];
       setProjects(newProjects);
@@ -129,6 +138,7 @@ const ProjectOnboarding: React.FC = () => {
     setAuditPath("");
     setAuditCaptureApproach("");
     setAuditRetentionDays(14);
+    setAuditLogGranularity("");
     setError("");
   };
   const handleEditProject = (idx: number) => {
@@ -137,6 +147,7 @@ const ProjectOnboarding: React.FC = () => {
     setAuditPath(projects[idx].auditPath || "");
     setAuditCaptureApproach(projects[idx].auditCaptureApproach || "");
     setAuditRetentionDays(projects[idx].auditRetentionDays || 14);
+    setAuditLogGranularity(projects[idx].auditLogGranularity || "");
     setEditProjectIdx(idx);
     setError("");
   };
@@ -190,6 +201,7 @@ const ProjectOnboarding: React.FC = () => {
         path: productPath.trim(),
         pattern: productPattern.trim(),
         submitPrefix: productSubmitPrefix.trim(),
+        auditMustColumns: auditMustColumns.trim(),
       };
       setProducts(updated);
       localStorage.setItem("dualSignProducts", JSON.stringify(updated));
@@ -203,6 +215,7 @@ const ProjectOnboarding: React.FC = () => {
           path: productPath.trim(),
           pattern: productPattern.trim(),
           submitPrefix: productSubmitPrefix.trim(),
+          auditMustColumns: auditMustColumns.trim(),
         },
       ];
       setProducts(newProducts);
@@ -213,6 +226,7 @@ const ProjectOnboarding: React.FC = () => {
     setProductPath("");
     setProductPattern("");
     setProductSubmitPrefix("");
+    setAuditMustColumns("");
     setError("");
   };
 
@@ -223,6 +237,7 @@ const ProjectOnboarding: React.FC = () => {
     setProductPath(prod.path);
     setProductPattern(prod.pattern);
     setProductSubmitPrefix(prod.submitPrefix || "");
+    setAuditMustColumns(prod.auditMustColumns || "");
     setEditProductIdx(idx);
     setError("");
   };
@@ -338,6 +353,20 @@ const ProjectOnboarding: React.FC = () => {
               helperText="How long to retain audit logs (days)"
             />
           </FormControl>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Audit Log Granularity</InputLabel>
+            <Select
+              value={auditLogGranularity}
+              label="Audit Log Granularity"
+              onChange={(e) => setAuditLogGranularity(e.target.value)}
+            >
+              {auditGranularityOptions.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Box display="flex" gap={2}>
             <Button type="submit" variant="contained" color="primary">
               {editProjectIdx !== null ? "Update Project" : "Add Project"}
@@ -353,6 +382,7 @@ const ProjectOnboarding: React.FC = () => {
                   setAuditPath("");
                   setAuditCaptureApproach("");
                   setAuditRetentionDays(14);
+                  setAuditLogGranularity("");
                   setError("");
                 }}
               >
@@ -446,6 +476,9 @@ const ProjectOnboarding: React.FC = () => {
                         Audit Retention Days: {proj.auditRetentionDays || 14}{" "}
                         days
                       </div>
+                      <div>
+                        Audit Log Granularity: {proj.auditLogGranularity || "-"}
+                      </div>
                     </>
                   }
                   sx={{ pr: 2 }}
@@ -526,6 +559,14 @@ const ProjectOnboarding: React.FC = () => {
             onChange={(e) => setProductSubmitPrefix(e.target.value)}
             required
           />
+          <TextField
+            label="Audit Must Columns"
+            value={auditMustColumns}
+            onChange={(e) => setAuditMustColumns(e.target.value)}
+            fullWidth
+            helperText="Pipe-delimited column names (e.g. col1|col2|col3)"
+            sx={{ mb: 2 }}
+          />
           <Box display="flex" gap={2}>
             <Button type="submit" variant="contained" color="primary">
               {editProductIdx !== null ? "Update Product" : "Add Product"}
@@ -541,6 +582,7 @@ const ProjectOnboarding: React.FC = () => {
                   setProductPath("");
                   setProductPattern("");
                   setProductSubmitPrefix("");
+                  setAuditMustColumns("");
                   setError("");
                 }}
               >

@@ -11,17 +11,18 @@ A modern, robust React-based web application for user onboarding, environment/pr
 - **Sidebar Navigation**: With icons for each feature.
 - **User Onboarding**: Add/edit/delete users, assign to environments and roles. Data persists in localStorage.
 - **Environment Onboarding**: Add/edit/delete environments. Data persists in localStorage.
-- **Project Onboarding**: Add projects and products, including Retention Days, Audit Path, and Audit Capture Approach. Product onboarding supports Product Submit File Prefix and file pattern matching.
+- **Project Onboarding**: Add projects and products, including Retention Days, Audit Path, Audit Capture Approach, and Audit Log Granularity (Diff Lines/Diff Columns). Product onboarding supports Product Submit File Prefix, file pattern matching, and Audit Must Columns (pipe-delimited).
 - **Maker-Checker Process**: Full file versioning, diff, approval/reject, and submission flows. Only one version can be under review at a time. All actions require comments and provide clear feedback.
 - **Checker Tab**: Modern modal for review (View Diff, Download, Approve, Reject, Approve & Submit). Status and comments are shown in both Maker and Checker UIs.
-- **Audit Logging**: Robust, production-grade audit logging on backend after Checker approval. Audit logs are reliably created in correct folder structure, with all required metadata and diff. Audit logs are immutable and write-once.
-- **Audit Log Viewer**: Modern UI for viewing audit logs, with filtering by project, file, maker, checker, action, and date. Full details and diff viewer for each log entry. Download/export option for JSON logs.
+- **Audit Logging**: Robust, production-grade audit logging on backend after Checker approval. Audit logs are reliably created in correct folder structure, with all required metadata and diff. Audit logs are immutable and write-once. Diff logic supports both Diff Lines and Diff Columns granularity, and always includes must columns.
+- **Audit Log Viewer**: Modern UI for viewing audit logs, with filtering by project, file, maker, checker, action, and date. Full details and diff viewer for each log entry. Download/export option for JSON and CSV logs.
 - **Audit Log Index**: Fast lookup via audit-index.json. All audit log writes update the index for scalable search.
 - **Retention/Cleanup**: Audit logs are cleaned up based on retention days per project.
 - **All debug output removed for production. Only user-facing error messages remain.**
 
 ## Pending / Next Steps
 
+- **Audit Log Diff Columns logic needs further debugging/fix.**
 - **Pending verification on Audit displayed on UI.**
 - **Pagination addition is pending.**
 - **Elastic search integration is pending.**
@@ -44,6 +45,7 @@ A modern, robust React-based web application for user onboarding, environment/pr
 - Fix product path logic so each product/project has a unique, correct path.
 - Add authentication and user session management.
 - Continue to verify and improve audit log display and compliance features.
+- Debug and fix Audit Log Diff Columns logic so it matches the expected output format and always captures changes.
 
 ---
 

@@ -12,6 +12,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { readFile } from "../api/fileApi";
+import { getDiffRowsForAudit, parseCsvToArray } from "./diffUtils";
 
 interface DiffViewProps {
   v0Content: string;
@@ -19,13 +20,6 @@ interface DiffViewProps {
   defaultDelimiter?: string;
   fileName?: string;
 }
-
-const parseCSV = (content: string, delimiter: string): string[][] => {
-  return content
-    .split("\n")
-    .filter(Boolean)
-    .map((row) => row.split(delimiter));
-};
 
 const getAllColumns = (rowsA: string[][], rowsB: string[][]): string[] => {
   const colsA = rowsA[0] || [];
@@ -70,8 +64,8 @@ const DiffView: React.FC<
   );
   const [selectAll, setSelectAll] = useState(true);
 
-  const rowsV0 = parseCSV(effectiveV0Content, delimiter);
-  const rowsVN = parseCSV(vNContent, delimiter);
+  const rowsV0 = parseCsvToArray(effectiveV0Content);
+  const rowsVN = parseCsvToArray(vNContent);
   const allColumns = getAllColumns(rowsV0, rowsVN);
 
   React.useEffect(() => {

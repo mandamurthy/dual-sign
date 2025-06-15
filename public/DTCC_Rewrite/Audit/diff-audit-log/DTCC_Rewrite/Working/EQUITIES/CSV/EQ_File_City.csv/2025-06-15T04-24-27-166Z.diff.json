@@ -1,0 +1,12 @@
+{
+  "project_name": "DTCC",
+  "environment": "DEV",
+  "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+  "timestamp": "2025-06-15T04:24:27.166Z",
+  "maker": "Maker",
+  "maker_comment": "se",
+  "checker": "Checker",
+  "checker_comment": "sss",
+  "check_action": "Approved",
+  "diff_text": "Header,number,city,state,zip,address,street,comment,suftyp^^number,city,state,zip,address,street,comment,suftyp\nRow 1,93,Brooklyn,NY,NoChange,NoChange,NoChange,NoChange,NoChange^^93,Brooklyn,NYY,NoChange,NoChange,NoChange,NoChange,NoChange\nRow 2,380,Providence,NoChange,02904,NoChange,NoChange,NoChange,NoChange^^380,Providence,NoChange,02903,NoChange,NoChange,NoChange,NoChange\nRow 11,1222,Greensburg,NoChange,NoChange,NoChange,NoChange,NoChange,NoChange^^122,Greensburg,NoChange,NoChange,NoChange,NoChange,NoChange,NoChange\nRow 13,240,Williamsport,PA,NoChange,240 W 3RD ST, WILLIAMSPORT PA 17701,NoChange,NoChange,NoChange^^240,Williamsport,PAA,NoChange,2400 W 3RD ST, WILLIAMSPORT PA 17701,NoChange,NoChange,NoChange\nRow 15,2221,Pottsville,NoChange,NoChange,NoChange,Markett,NoChange,NoChange^^2221,Pottsville,NoChange,NoChange,NoChange,Market,NoChange,NoChange\nRow 16,337,Hyattsville,NoChange,NoChange,NoChange,NoChange,canonical place,NoChange^^337,Hyattsville,NoChange,NoChange,NoChange,NoChange,canonical placee,NoChange\nRow 17,103,Elkton,MD,NoChange,NoChange,NoChange,NoChange,NoChange^^103,Elkton,MDd,NoChange,NoChange,NoChange,NoChange,NoChange\nRow 20,1480,Wytheville,NoChange,NoChange,NoChange,Mainn,NoChange,NoChange^^1480,Wytheville,NoChange,NoChange,NoChange,Main,NoChange,NoChange\nRow 28,115,Greenwood,NoChange,NoChange,NoChange,NoChange,NoChange,Ctt^^115,Greenwood,NoChange,NoChange,NoChange,NoChange,NoChange,Ct\nRow 37,602,South Bend,INN,NoChange,NoChange,NoChange,NoChange,NoChange^^602,South Bend,IN,NoChange,NoChange,NoChange,NoChange,NoChange\nRow 50,115,Grand Island,NoChange,688033,NoChange,NoChange,NoChange,NoChange^^115,Grand Island,NoChange,68803,NoChange,NoChange,NoChange,NoChange"
+}

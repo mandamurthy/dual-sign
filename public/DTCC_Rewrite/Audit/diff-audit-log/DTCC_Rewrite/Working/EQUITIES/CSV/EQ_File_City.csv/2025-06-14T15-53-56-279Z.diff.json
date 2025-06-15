@@ -1,0 +1,12 @@
+{
+  "project_name": "DTCC",
+  "environment": "DEV",
+  "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+  "timestamp": "2025-06-14T15:53:56.279Z",
+  "maker": "Maker",
+  "maker_comment": "diff columns new test",
+  "checker": "Checker",
+  "checker_comment": "diff columns new test approved",
+  "check_action": "Approved",
+  "diff_text": "NO_DIFF"
+}

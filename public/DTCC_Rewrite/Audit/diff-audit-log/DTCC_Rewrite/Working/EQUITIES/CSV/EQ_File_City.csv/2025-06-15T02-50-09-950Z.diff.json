@@ -2,11 +2,11 @@
   "project_name": "DTCC",
   "environment": "DEV",
   "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
-  "timestamp": "2025-06-14T04:40:49.408Z",
+  "timestamp": "2025-06-15T02:50:09.950Z",
   "maker": "Maker",
-  "maker_comment": "test",
+  "maker_comment": "debug testing",
   "checker": "Checker",
-  "checker_comment": "aaaa",
+  "checker_comment": "debug testing approved",
   "check_action": "Approved",
   "diff_text": "NO_DIFF"
 }
