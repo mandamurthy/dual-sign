@@ -288,5 +288,45 @@
     "checker": "Checker",
     "timestamp": "2025-06-15T05:10:43.114Z",
     "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-15T10-11-37-933Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "2025-06-15T10:11:37.933Z",
+    "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-15T10-12-40-413Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "2025-06-15T10:12:40.413Z",
+    "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-15T10-48-28-159Z.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "15/06/2025, 6:48:28 pm",
+    "check_action": "Approved"
+  },
+  {
+    "file": "diff-audit-log\\DTCC_Rewrite\\Working\\EQUITIES\\CSV\\EQ_File_City.csv\\2025-06-15T18-53-45-947.diff.json",
+    "project_name": "DTCC",
+    "environment": "DEV",
+    "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+    "maker": "Maker",
+    "checker": "Checker",
+    "timestamp": "15/06/2025, 6:53:45 pm",
+    "check_action": "Approved"
   }
 ]

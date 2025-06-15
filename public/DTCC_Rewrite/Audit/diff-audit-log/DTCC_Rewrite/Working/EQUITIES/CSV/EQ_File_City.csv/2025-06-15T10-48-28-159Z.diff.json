@@ -1,0 +1,12 @@
+{
+  "project_name": "DTCC",
+  "environment": "DEV",
+  "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+  "timestamp": "15/06/2025, 6:48:28 pm",
+  "maker": "Maker",
+  "maker_comment": "ddd",
+  "checker": "Checker",
+  "checker_comment": "dddd",
+  "check_action": "Approved",
+  "diff_text": "Header,\"address\",\"number\",\"predir\",\"prequal\",\"pretyp\",\"street\",\"suftyp\",\"sufqual\",\"sufdir\",\"unittyp\",\"unit\",\"city\",\"state\",\"zip\",\"lon\",\"lat\",\"count\",\"comment\"^^\"address\",\"number\",\"predir\",\"prequal\",\"pretyp\",\"street\",\"suftyp\",\"sufqual\",\"sufdir\",\"unittyp\",\"unit\",\"city\",\"state\",\"zip\",\"lon\",\"lat\",\"count\",\"comment\"\nRow 16,\"337 BRIGHTSEAT ROAD, LANDOVER MD 20785\",\"337\",\"\",\"\",\"\",\"Brightseat\",\"Rd\",\"\",\"\",\"\",\"\",\"Hyattsville\",\"MD\",\"20785\",\"\",\"\",\"\",\"canonical placee\"^^\"337 BRIGHTSEAT ROAD, LANDOVER MD 20785\",\"337\",\"\",\"\",\"\",\"Brightseat\",\"Rd\",\"\",\"\",\"\",\"\",\"Hyattsville\",\"MD\",\"20785\",\"\",\"\",\"\",\"canonical place\"\nRow 17,\"101 CHESAPEAKE BLVD, ELKTON MD 21921\",\"103\",\"\",\"\",\"\",\"Chesapeake\",\"Blvd\",\"\",\"\",\"\",\"\",\"Elkton\",\"MDd\",\"21921\",\"\",\"\",\"\",\"find nearest corner\"^^\"101 CHESAPEAKE BLVD, ELKTON MD 21921\",\"103\",\"\",\"\",\"\",\"Chesapeake\",\"Blvd\",\"\",\"\",\"\",\"\",\"Elkton\",\"MD\",\"21921\",\"\",\"\",\"\",\"find nearest corner\""
+}

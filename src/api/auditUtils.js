@@ -33,66 +33,93 @@ function writeAuditLog({
   auditRetentionDays,
   timestamp = new Date(),
 }) {
-  const ts = new Date(timestamp);
-  const dateStr = ts.toISOString().slice(0, 10); // YYYY-MM-DD
-  const timeStr = ts.toISOString().replace(/[:.]/g, '-'); // For filename
-  const fullAuditPath = getFullAuditPath(auditPath);
-  let folder;
-  if (auditCaptureApproach === 'Date') {
-    folder = path.join(fullAuditPath, 'diff-audit-log', dateStr);
-  } else {
-    folder = path.join(fullAuditPath, 'diff-audit-log', fileName);
-  }
-  console.log('[AuditLog][DEBUG][BACKEND] Creating folder:', folder);
-  if (!fs.existsSync(folder)) {
-    try {
-      fs.mkdirSync(folder, { recursive: true });
-      console.log('[AuditLog][DEBUG][BACKEND] Folder created:', folder);
-    } catch (err) {
-      console.error('[AuditLog][DEBUG][BACKEND] Failed to create folder:', folder, err);
-      throw err;
-    }
-  }
-  let filePath;
-  if (auditCaptureApproach === 'Date') {
-    filePath = path.join(folder, `${fileName}.diff.json`);
-  } else {
-    filePath = path.join(folder, `${timeStr}.diff.json`);
-  }
-  console.log('[AuditLog][DEBUG][BACKEND] Writing audit log file:', filePath);
-  const auditData = {
-    project_name: projectName,
+  console.log('[AuditLog][DEBUG][BACKEND] writeAuditLog called with:', {
+    auditPath,
+    auditCaptureApproach,
+    projectName,
     environment,
-    file_name: fileName,
-    timestamp: ts.toISOString(),
+    fileName,
     maker,
-    maker_comment: makerComment,
+    makerComment,
     checker,
-    checker_comment: checkerComment,
-    check_action: checkAction,
-    diff_text: diffText,
-  };
-  if (fs.existsSync(filePath)) {
-    console.error('[AuditLog][DEBUG][BACKEND] Audit log already exists:', filePath);
-    throw new Error('Audit log already exists (immutability enforced)');
-  }
+    checkerComment,
+    checkAction,
+    diffText,
+    auditRetentionDays,
+    timestamp
+  });
   try {
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`; // YYYY-MM-DD
+    const timeStr = getLocalTimestampForFilename(); // For filename
+    const fullAuditPath = getFullAuditPath(auditPath);
+    console.log('[AuditLog][DEBUG][BACKEND] Calculated fullAuditPath:', fullAuditPath);
+    let folder;
+    if (auditCaptureApproach === 'Date') {
+      folder = path.join(fullAuditPath, 'diff-audit-log', dateStr);
+    } else {
+      folder = path.join(fullAuditPath, 'diff-audit-log', fileName);
+    }
+    console.log('[AuditLog][DEBUG][BACKEND] Calculated folder path:', folder);
+    console.log('[AuditLog][DEBUG][BACKEND] Checking if folder exists:', folder);
+    if (!fs.existsSync(folder)) {
+      console.log('[AuditLog][DEBUG][BACKEND] Folder does not exist, will create:', folder);
+      try {
+        fs.mkdirSync(folder, { recursive: true });
+        console.log('[AuditLog][DEBUG][BACKEND] Folder created successfully:', folder);
+      } catch (err) {
+        console.error('[AuditLog][DEBUG][BACKEND] Failed to create folder:', folder, err);
+        throw err;
+      }
+    } else {
+      console.log('[AuditLog][DEBUG][BACKEND] Folder exists:', folder);
+    }
+    let filePath;
+    if (auditCaptureApproach === 'Date') {
+      filePath = path.join(folder, `${fileName}.diff.json`);
+    } else {
+      filePath = path.join(folder, `${timeStr}.diff.json`);
+    }
+    console.log('[AuditLog][DEBUG][BACKEND] Calculated file path:', filePath);
+    console.log('[AuditLog][DEBUG][BACKEND] Checking if file exists:', filePath);
+    if (fs.existsSync(filePath)) {
+      console.error('[AuditLog][DEBUG][BACKEND] File already exists:', filePath);
+      throw new Error('Audit log already exists (immutability enforced)');
+    } else {
+      console.log('[AuditLog][DEBUG][BACKEND] File does not exist, will create:', filePath);
+    }
+    const auditData = {
+      project_name: projectName,
+      environment,
+      file_name: fileName,
+      timestamp: timestamp, // Store as received (local string)
+      maker,
+      maker_comment: makerComment,
+      checker,
+      checker_comment: checkerComment,
+      check_action: checkAction,
+      diff_text: diffText,
+    };
+    console.log('[AuditLog][DEBUG][BACKEND] Attempting to write audit log file:', filePath);
     fs.writeFileSync(filePath, JSON.stringify(auditData, null, 2));
-    console.log('[AuditLog][DEBUG][BACKEND] Audit log written:', filePath);
+    console.log('[AuditLog][DEBUG][BACKEND] Audit log file written successfully:', filePath);
+    console.log('[AuditLog][DEBUG][BACKEND] Attempting to update audit index for:', fullAuditPath);
+    updateAuditIndex(fullAuditPath, {
+      file: path.relative(fullAuditPath, filePath),
+      project_name: projectName,
+      environment,
+      file_name: fileName,
+      maker,
+      checker,
+      timestamp: timestamp, // Store as received (local string)
+      check_action: checkAction,
+    });
+    console.log('[AuditLog][DEBUG][BACKEND] Audit index updated successfully for:', fullAuditPath);
+    console.log('[AuditLog][DEBUG][BACKEND] writeAuditLog completed successfully.');
   } catch (err) {
-    console.error('[AuditLog][DEBUG][BACKEND] Failed to write audit log:', filePath, err);
+    console.error('[AuditLog][DEBUG][BACKEND] Exception in writeAuditLog:', err);
     throw err;
   }
-  updateAuditIndex(fullAuditPath, {
-    file: path.relative(fullAuditPath, filePath),
-    project_name: projectName,
-    environment,
-    file_name: fileName,
-    maker,
-    checker,
-    timestamp: ts.toISOString(),
-    check_action: checkAction,
-  });
 }
 
 // Helper to normalize and resolve auditPath
@@ -171,6 +198,24 @@ function cleanupOldAuditLogs(auditPath, retentionDays) {
   } catch (err) {
     console.error('[AuditLog][DEBUG][BACKEND] Failed to update cleaned audit index:', indexPath, err);
   }
+}
+
+/**
+ * Get a timestamp string for filenames, based on the local time.
+ * Format: YYYY-MM-DDTHH-mm-ss-SSS (sortable, no forbidden chars)
+ * @returns {string}
+ */
+function getLocalTimestampForFilename() {
+  const now = new Date();
+  const pad = (n, l = 2) => n.toString().padStart(l, '0');
+  const year = now.getFullYear();
+  const month = pad(now.getMonth() + 1);
+  const day = pad(now.getDate());
+  const hour = pad(now.getHours());
+  const min = pad(now.getMinutes());
+  const sec = pad(now.getSeconds());
+  const ms = pad(now.getMilliseconds(), 3);
+  return `${year}-${month}-${day}T${hour}-${min}-${sec}-${ms}`;
 }
 
 export { writeAuditLog, updateAuditIndex, cleanupOldAuditLogs };

@@ -311,7 +311,7 @@ const Checker: React.FC = () => {
         checkAction,
         diffText,
         auditRetentionDays: project.auditRetentionDays,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString(),
       };
       try {
         await postAuditLog(payload);

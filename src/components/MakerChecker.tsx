@@ -189,14 +189,17 @@ const Maker: React.FC = () => {
       v0UploadedAt = new Date(stat.mtime).toLocaleString();
     }
     versions.push({
-      versionLabel: "v0 (Workspace)",
+      versionLabel: "V0 (Workspace)",
       uploadedAt: v0UploadedAt,
       status: "Current",
       isCurrent: true,
     });
-    // Uploaded versions (find all dualSignUpload_<file>_vN)
+    // Uploaded versions (find all dualSignUpload_<file>_VYYYYMMDDHHMMSS)
     const regex = new RegExp(
-      `^dualSignUpload_${file.replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")}_v(\\d+)$`
+      `^dualSignUpload_${file.replace(
+        /[-\\^$*+?.()|[\]{}]/g,
+        "\\$&"
+      )}_V(\\d{14})$`
     );
     const found = Object.keys(localStorage)
       .map((key) => {
@@ -205,7 +208,7 @@ const Maker: React.FC = () => {
           try {
             const data = JSON.parse(localStorage.getItem(key) || "{}") || {};
             return {
-              versionLabel: `v${m[1]}`,
+              versionLabel: `V${m[1]}`,
               uploadedAt: data.uploadedAt || "-",
               status: data.status || "Pending",
               isCurrent: false,
@@ -216,33 +219,24 @@ const Maker: React.FC = () => {
         return null;
       })
       .filter((v) => v !== null);
-    // Sort by version number
-    found.sort(
-      (a, b) =>
-        parseInt(a!.versionLabel.slice(1)) - parseInt(b!.versionLabel.slice(1))
-    );
+    // Sort by version timestamp
+    found.sort((a, b) => a!.versionLabel.localeCompare(b!.versionLabel));
     versions.push(...found);
     return versions;
   };
 
   const handleUpload = async (file: string, uploadedContent: string) => {
-    // Find next version number
-    let maxN = 0;
-    Object.keys(localStorage).forEach((key) => {
-      const m = key.match(
-        new RegExp(
-          `^dualSignUpload_${file.replace(
-            /[-\\^$*+?.()|[\]{}]/g,
-            "\\$&"
-          )}_v(\\d+)$`
-        )
-      );
-      if (m) maxN = Math.max(maxN, parseInt(m[1]));
-    });
-    const nextN = maxN + 1;
-    const versionKey = `dualSignUpload_${file}_v${nextN}`;
-    const versionLabel = `v${nextN}`;
-    const uploadedAt = new Date().toLocaleString();
+    // Use timestamp for version label
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const versionTimestamp = `${now.getFullYear()}${pad(
+      now.getMonth() + 1
+    )}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(
+      now.getSeconds()
+    )}`;
+    const versionKey = `dualSignUpload_${file}_V${versionTimestamp}`;
+    const versionLabel = `V${versionTimestamp}`;
+    const uploadedAt = now.toLocaleString();
     localStorage.setItem(
       versionKey,
       JSON.stringify({
@@ -337,12 +331,8 @@ const Maker: React.FC = () => {
       );
       return;
     }
-    const key = Object.keys(localStorage).find(
-      (k) =>
-        k.startsWith(`dualSignUpload_${versionModalFile}_`) &&
-        localStorage.getItem(k)?.includes(`"${versionLabel}"`)
-    );
-    if (key) {
+    const key = `dualSignUpload_${versionModalFile}_${versionLabel}`;
+    if (key in localStorage) {
       const data = JSON.parse(localStorage.getItem(key) || "{}");
       window.open(
         `/diff?v0=${encodeURIComponent(
@@ -356,52 +346,54 @@ const Maker: React.FC = () => {
   };
 
   const handleDownloadVersion = async (versionLabel: string) => {
-    if (!versionModalFile) return;
-    // Always use forward slashes and ensure path is relative to public/
-    let relPath = versionModalFile
-      .replace(/^.*public[\\/]/, "")
-      .replace(/\\/g, "/");
-    if (versionLabel === "v0 (Workspace)") {
-      // Download the workspace file from backend
+    console.debug("[DownloadVersion] versionLabel:", versionLabel);
+    if (versionLabel.trim().toLowerCase() === "v0 (workspace)") {
+      // Download the workspace file from backend API (consistent with Maker Process frame)
       try {
-        const content = await readFile(relPath);
+        // Enable debug mode for path
+        console.debug("[V0 Download] versionModalFile:", versionModalFile);
+        let rel = versionModalFile
+          .replace(/^.*public[\\/]/, "")
+          .replace(/\\/g, "/");
+        console.debug("[V0 Download] rel path for API:", rel);
+        const content = await readFile(rel);
         const blob = new Blob([content], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
+        const base =
+          rel
+            .split("/")
+            .pop()
+            ?.replace(/\.csv$/i, "") || "downloaded_file";
         const a = document.createElement("a");
         a.href = url;
-        a.download = relPath.split("/").pop() || "downloaded_file.csv";
+        a.download = `${base}.csv`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
       } catch (e) {
+        console.error("[V0 Download] Error:", e);
         setSnackbar({
           open: true,
-          message: "Download failed: " + (e as Error).message,
+          message:
+            "Download failed: " +
+            (e as Error).message +
+            ". Please check if the file exists in the workspace.",
         });
       }
     } else {
       // Find the key for this version
-      const key = Object.keys(localStorage).find(
-        (k) =>
-          k.startsWith(`dualSignUpload_${versionModalFile}_`) &&
-          localStorage.getItem(k)?.includes(`"${versionLabel}"`)
-      );
-      if (key) {
+      const key = `dualSignUpload_${versionModalFile}_${versionLabel}`;
+      if (key in localStorage) {
         const data = JSON.parse(localStorage.getItem(key) || "{}");
         const blob = new Blob([data.content || ""], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
-        // Format uploadedAt as YYYYMMDDHHmmss
-        let ts = "";
-        if (data.uploadedAt) {
-          const d = new Date(data.uploadedAt);
-          const pad = (n: number) => n.toString().padStart(2, "0");
-          ts = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(
-            d.getDate()
-          )}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-        }
-        const base = versionModalFile.split("/").pop() || "downloaded_file";
-        const filename = `${base}_${versionLabel}${ts ? `_${ts}` : ""}.csv`;
+        const base =
+          versionModalFile
+            .split("/")
+            .pop()
+            ?.replace(/\.csv$/i, "") || "downloaded_file";
+        const filename = `${base}_${versionLabel}.csv`;
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
@@ -624,23 +616,20 @@ const Maker: React.FC = () => {
                               reader.onload = async (event) => {
                                 const uploadedContent = event.target
                                   ?.result as string;
-                                // Find next version number
-                                let maxN = 0;
-                                Object.keys(localStorage).forEach((key) => {
-                                  const m = key.match(
-                                    new RegExp(
-                                      `^dualSignUpload_${file.replace(
-                                        /[-\\^$*+?.()|[\]{}]/g,
-                                        "\\$&"
-                                      )}_v(\\d+)$`
-                                    )
-                                  );
-                                  if (m) maxN = Math.max(maxN, parseInt(m[1]));
-                                });
-                                const nextN = maxN + 1;
-                                const versionKey = `dualSignUpload_${file}_v${nextN}`;
-                                const versionLabel = `v${nextN}`;
-                                const uploadedAt = new Date().toLocaleString();
+                                // Use timestamp for version label
+                                const now = new Date();
+                                const pad = (n: number) =>
+                                  n.toString().padStart(2, "0");
+                                const versionTimestamp = `${now.getFullYear()}${pad(
+                                  now.getMonth() + 1
+                                )}${pad(now.getDate())}${pad(
+                                  now.getHours()
+                                )}${pad(now.getMinutes())}${pad(
+                                  now.getSeconds()
+                                )}`;
+                                const versionKey = `dualSignUpload_${file}_V${versionTimestamp}`;
+                                const versionLabel = `V${versionTimestamp}`;
+                                const uploadedAt = now.toLocaleString();
                                 localStorage.setItem(
                                   versionKey,
                                   JSON.stringify({

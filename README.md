@@ -22,6 +22,10 @@ A modern, robust React-based web application for user onboarding, environment/pr
 - Audit log diff text output now always uses encapsulated quotes, matching the original CSV quoting.
 - Audit Trail date filter defaults to today's date; user can clear for ALL or pick a specific date.
 - Codebase cleaned of unused variables and debug logic.
+- **Versioning:** All uploaded versions now use timestamp-based identifiers (VYYYYMMDDHHMMSS) instead of numeric (V1, V2, ...), with V0 reserved for the workspace. All version usage (DiffViewer, Audit Log, Display Versions modal, downloads, etc.) is consistent with the new format.
+- **Download Fixes:** Download logic for V0 and versioned files in the Display Versions modal is unified and fixed. No hardcoded paths; all file operations use parameterized paths from onboarding/product config.
+- **Audit Log Local Time:** Audit log filenames now use local (Singapore) time, and the timestamp field in the log uses the local time string from the frontend.
+- **Granular Debug Logging:** Backend audit log creation now includes granular debug logging for every step, aiding troubleshooting and transparency.
 
 ## Pending / Next Steps
 
@@ -64,6 +68,10 @@ _Last updated: June 15, 2025_
 - Audit log diff text output now always uses encapsulated quotes, matching the original CSV quoting.
 - Audit Trail date filter defaults to today's date; user can clear for ALL or pick a specific date.
 - Codebase cleaned of unused variables and debug logic.
+- **Versioning:** All uploaded versions now use timestamp-based identifiers (VYYYYMMDDHHMMSS) instead of numeric (V1, V2, ...), with V0 reserved for the workspace. All version usage (DiffViewer, Audit Log, Display Versions modal, downloads, etc.) is consistent with the new format.
+- **Download Fixes:** Download logic for V0 and versioned files in the Display Versions modal is unified and fixed. No hardcoded paths; all file operations use parameterized paths from onboarding/product config.
+- **Audit Log Local Time:** Audit log filenames now use local (Singapore) time, and the timestamp field in the log uses the local time string from the frontend.
+- **Granular Debug Logging:** Backend audit log creation now includes granular debug logging for every step, aiding troubleshooting and transparency.
 
 ### Pending / Next Steps
 
