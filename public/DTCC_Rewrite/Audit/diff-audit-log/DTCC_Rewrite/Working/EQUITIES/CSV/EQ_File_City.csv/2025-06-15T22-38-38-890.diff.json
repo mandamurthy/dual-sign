@@ -1,0 +1,13 @@
+{
+  "project_name": "DTCC",
+  "environment": "DEV",
+  "file_name": "DTCC_Rewrite/Working/EQUITIES/CSV/EQ_File_City.csv",
+  "timestamp": "2025-06-15T14:38:38.891Z",
+  "timestamp_display": "15/06/2025, 10:38:38 pm",
+  "maker": "Maker",
+  "maker_comment": "d",
+  "checker": "Checker",
+  "checker_comment": "d",
+  "check_action": "Approved",
+  "diff_text": "Header,\"address\",\"number\",\"predir\",\"prequal\",\"pretyp\",\"street\",\"suftyp\",\"sufqual\",\"sufdir\",\"unittyp\",\"unit\",\"city\",\"state\",\"zip\",\"lon\",\"lat\",\"count\",\"comment\"^^\"address\",\"number\",\"predir\",\"prequal\",\"pretyp\",\"street\",\"suftyp\",\"sufqual\",\"sufdir\",\"unittyp\",\"unit\",\"city\",\"state\",\"zip\",\"lon\",\"lat\",\"count\",\"comment\"\nRow 1,\"93 NORTH 9TH STREET, BROOKLYN NY 11211\",\"93\",\"N\",\"\",\"\",\"9th\",\"St\",\"\",\"\",\"\",\"\",\"Brooklyn\",\"NY\",\"11211\",\"\",\"\",\"\",\"\"^^\"93 NORTH 9TH STREET, BROOKLYN NY 11211\",\"93\",\"N\",\"\",\"\",\"9th\",\"St\",\"\",\"\",\"\",\"\",\"Brooklyn\",\"NYY\",\"11211\",\"\",\"\",\"\",\"\"\nRow 13,\"240 W 3RD ST, WILLIAMSPORT PA 17701\",\"240\",\"W\",\"\",\"\",\"3rd\",\"St\",\"\",\"\",\"\",\"\",\"Williamsport\",\"PA\",\"17701\",\"\",\"\",\"\",\"\"^^\"2400 W 3RD ST, WILLIAMSPORT PA 17701\",\"240\",\"W\",\"\",\"\",\"3rd\",\"St\",\"\",\"\",\"\",\"\",\"Williamsport\",\"PAA\",\"17701\",\"\",\"\",\"\",\"\"\nRow 16,\"337 BRIGHTSEAT ROAD, LANDOVER MD 20785\",\"337\",\"\",\"\",\"\",\"Brightseat\",\"Rd\",\"\",\"\",\"\",\"\",\"Hyattsville\",\"MD\",\"20785\",\"\",\"\",\"\",\"canonical place\"^^\"337 BRIGHTSEAT ROAD, LANDOVER MD 20785\",\"337\",\"\",\"\",\"\",\"Brightseat\",\"Rd\",\"\",\"\",\"\",\"\",\"Hyattsville\",\"MD\",\"20785\",\"\",\"\",\"\",\"canonical placee\"\nRow 17,\"101 CHESAPEAKE BLVD, ELKTON MD 21921\",\"103\",\"\",\"\",\"\",\"Chesapeake\",\"Blvd\",\"\",\"\",\"\",\"\",\"Elkton\",\"MD\",\"21921\",\"\",\"\",\"\",\"find nearest corner\"^^\"101 CHESAPEAKE BLVD, ELKTON MD 21921\",\"103\",\"\",\"\",\"\",\"Chesapeake\",\"Blvd\",\"\",\"\",\"\",\"\",\"Elkton\",\"MDd\",\"21921\",\"\",\"\",\"\",\"find nearest corner\""
+}

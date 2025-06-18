@@ -17,36 +17,8 @@ import {
   DialogActions,
 } from "@mui/material";
 import ListItemButton from "@mui/material/ListItemButton";
-import * as XLSX from "xlsx";
-
-// TypeScript: declare a global property for the audit log existence cache
-// @ts-ignore
-if (typeof window !== "undefined" && !("auditLogExistenceCache" in window)) {
-  // @ts-ignore
-  window.auditLogExistenceCache = {};
-}
-
-// Utility to fetch audit index from backend or public folder
-async function fetchAuditIndex() {
-  const resp = await fetch(
-    "/DTCC_Rewrite/Audit/diff-audit-log/audit-index.json"
-  );
-  if (!resp.ok) throw new Error("Failed to load audit index");
-  return await resp.json();
-}
-
-// Helper to get projects from localStorage
-function getProjects() {
-  try {
-    return JSON.parse(localStorage.getItem("dualSignProjects") || "[]");
-  } catch {
-    return [];
-  }
-}
 
 const AuditTrail: React.FC = () => {
-  const [auditIndex, setAuditIndex] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>(getProjects());
   const today = new Date().toISOString().slice(0, 10);
   const [filter, setFilter] = useState({
     project: "",
@@ -60,117 +32,56 @@ const AuditTrail: React.FC = () => {
   const [logDetails, setLogDetails] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [cacheVersion, setCacheVersion] = useState(0);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [serverResults, setServerResults] = useState<any[]>([]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
+  // Fetch paginated/filterable audit logs from backend (ElasticSearch)
   useEffect(() => {
-    // Force clear cache and re-render on mount
-    if (
-      typeof window !== "undefined" &&
-      (window as any).auditLogExistenceCache
-    ) {
-      (window as any).auditLogExistenceCache = {};
-    }
     setLoading(true);
-    fetchAuditIndex()
-      .then(setAuditIndex)
+    setError("");
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (filter.project) params.append("project", filter.project);
+    if (filter.file) params.append("file", filter.file);
+    if (filter.maker) params.append("maker", filter.maker);
+    if (filter.checker) params.append("checker", filter.checker);
+    if (filter.action) params.append("action", filter.action);
+    if (filter.date) params.append("date", filter.date);
+    fetch(`/api/audit-logs?${params.toString()}`)
+      .then((resp) => {
+        if (!resp.ok) throw new Error("Failed to fetch audit logs");
+        return resp.json();
+      })
+      .then((data) => {
+        setServerResults(data.results);
+        setTotalCount(data.total);
+      })
       .catch(() => setError("Failed to load audit logs."))
       .finally(() => setLoading(false));
-    setProjects(getProjects());
-  }, []);
+  }, [currentPage, pageSize, filter]);
 
-  // Refresh handler to reload audit index and clear cache
-  const handleRefresh = () => {
-    setLoading(true);
-    // @ts-ignore
-    if (typeof window !== "undefined" && window.auditLogExistenceCache) {
-      // @ts-ignore
-      window.auditLogExistenceCache = {};
-    }
-    fetchAuditIndex()
-      .then(setAuditIndex)
-      .catch(() => setError("Failed to load audit logs."))
-      .finally(() => setLoading(false));
-    setProjects(getProjects());
-  };
-
-  // Helper to get audit log file path for an entry
-  function getAuditLogPath(entry: any) {
-    const project = projects.find(
-      (p: any) =>
-        p.name === entry.project_name && p.environment === entry.environment
-    );
-    if (!project) return null;
-    let base = project.auditPath.replace(/\\/g, "/");
-    if (!base.endsWith("/")) base += "/";
-    let relPath = "";
-    if (project.auditCaptureApproach === "Date") {
-      // Date-based folder: diff-audit-log/YYYY-MM-DD/file_name.diff.json
-      const date = entry.timestamp.slice(0, 10);
-      relPath = `diff-audit-log/${date}/${entry.file_name}.diff.json`;
-    } else {
-      // ProductName-based folder: diff-audit-log/file_name/timestamp.diff.json
-      relPath = `diff-audit-log/${entry.file_name}/${entry.timestamp.replace(
-        /[:.]/g,
-        "-"
-      )}.diff.json`;
-    }
-    return base + relPath;
-  }
-
-  // Filtering logic
-  const filtered = auditIndex.filter((entry) => {
-    const logPath = getAuditLogPath(entry);
-    if (!logPath) return false;
-    // @ts-ignore
-    const cache = (window as any).auditLogExistenceCache;
-    if (cache[logPath] === false) {
-      // Removed debug output for production
-      return false;
-    }
-    if (cache[logPath] === true) {
-      // continue
-    } else {
-      // Use API endpoint for file existence check
-      fetch(`/api/file?path=${encodeURIComponent(logPath)}`, { method: "GET" })
-        .then((resp) => {
-          cache[logPath] = resp.ok;
-          // Removed debug output for production
-          setCacheVersion((v) => v + 1); // force re-render
-        })
-        .catch(() => {
-          cache[logPath] = false;
-          // Removed debug output for production
-          setCacheVersion((v) => v + 1); // force re-render
-        });
-    }
-    if (filter.project && entry.project_name !== filter.project) return false;
-    if (
-      filter.file &&
-      !entry.file_name.toLowerCase().includes(filter.file.toLowerCase())
-    )
-      return false;
-    if (filter.action && entry.check_action !== filter.action) return false;
-    if (filter.date && !entry.timestamp.startsWith(filter.date)) return false;
-    return true;
-  });
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   // Unique values for dropdowns
-  const actions = Array.from(new Set(auditIndex.map((e) => e.check_action)));
+  const actions = Array.from(new Set(serverResults.map((e) => e.check_action)));
+  const projects = Array.from(
+    new Set(serverResults.map((e) => e.project_name))
+  );
 
   // Load log details when selected
   useEffect(() => {
     if (!selectedLog) return;
-    setLogDetails(null);
-    const logPath = getAuditLogPath(selectedLog);
-    if (!logPath) {
-      setLogDetails({ error: "Project config not found for this log." });
-      return;
-    }
-    fetch(logPath)
-      .then((resp) => resp.json())
-      .then(setLogDetails)
-      .catch(() => setLogDetails({ error: "Failed to load log details." }));
-  }, [selectedLog, projects]);
+    setLogDetails(selectedLog);
+  }, [selectedLog]);
 
   return (
     <Box maxWidth={1100} mx="auto" my={6} p={3} component={Paper} elevation={3}>
@@ -240,54 +151,128 @@ const AuditTrail: React.FC = () => {
         >
           Clear
         </Button>
-        <Button variant="contained" color="primary" onClick={handleRefresh}>
-          Refresh
-        </Button>
       </Stack>
       {loading ? (
         <Alert severity="info">Loading...</Alert>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
-      ) : filtered.length === 0 ? (
+      ) : serverResults.length === 0 ? (
         <Alert severity="info">No audit events found.</Alert>
       ) : (
-        <List>
-          {filtered.map((entry, idx) => (
-            <ListItem key={idx} divider disablePadding>
-              <ListItemButton
-                onClick={() => setSelectedLog(entry)}
-                sx={{ cursor: "pointer" }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  alignItems="center"
-                  width="100%"
-                >
-                  <Box flex={1}>
-                    <Typography fontWeight={600}>
-                      {entry.file_name.split("/").pop()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {entry.timestamp} | Maker: {entry.maker} | Checker:{" "}
-                      {entry.checker} | Action: {entry.check_action}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={entry.project_name}
-                    color="primary"
-                    size="small"
-                  />
-                  <Chip
-                    label={entry.environment}
-                    color="secondary"
-                    size="small"
-                  />
-                </Stack>
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <>
+          <List>
+            {serverResults
+              .slice() // copy to avoid mutating state
+              .sort((a, b) => {
+                // Sort descending by timestamp (ISO string)
+                return (b.timestamp || "").localeCompare(a.timestamp || "");
+              })
+              .map((entry, idx) => (
+                <ListItem key={idx} divider disablePadding>
+                  <ListItemButton
+                    onClick={() => setSelectedLog(entry)}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      alignItems="center"
+                      width="100%"
+                    >
+                      <Box flex={1}>
+                        <Typography fontWeight={600}>
+                          {entry.file_name.split("/").pop()}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {entry.timestamp_display || entry.timestamp} | Maker:{" "}
+                          {entry.maker} | Checker: {entry.checker} | Action:{" "}
+                          {entry.check_action}
+                        </Typography>
+                        {/* Display Maker and Checker comments */}
+                        {entry.maker_comment && (
+                          <Typography
+                            variant="body2"
+                            color="#1976d2"
+                            sx={{ mt: 0.5 }}
+                          >
+                            Maker Comment: {entry.maker_comment}
+                          </Typography>
+                        )}
+                        {entry.checker_comment && (
+                          <Typography
+                            variant="body2"
+                            color="#388e3c"
+                            sx={{ mt: 0.5 }}
+                          >
+                            Checker Comment: {entry.checker_comment}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Chip
+                        label={entry.project_name}
+                        color="primary"
+                        size="small"
+                      />
+                      <Chip
+                        label={entry.environment}
+                        color="secondary"
+                        size="small"
+                      />
+                    </Stack>
+                  </ListItemButton>
+                </ListItem>
+              ))}
+          </List>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ mt: 2 }}
+          >
+            <Button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              First
+            </Button>
+            <Button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </Button>
+            <Typography>
+              Page {currentPage} of {totalPages} (Total: {totalCount})
+            </Typography>
+            <Button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+            <Button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              Last
+            </Button>
+            <TextField
+              select
+              label="Page Size"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              size="small"
+              sx={{ width: 100 }}
+            >
+              {[10, 20, 50, 100].map((size) => (
+                <MenuItem key={size} value={size}>
+                  {size}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+        </>
       )}
       <Dialog
         open={!!selectedLog}
@@ -298,130 +283,15 @@ const AuditTrail: React.FC = () => {
         <DialogTitle>Audit Log Details</DialogTitle>
         <DialogContent dividers>
           {logDetails ? (
-            logDetails.error ? (
-              <Alert severity="error">{logDetails.error}</Alert>
-            ) : (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  File: {logDetails.file_name}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Project: {logDetails.project_name} | Env:{" "}
-                  {logDetails.environment} | Timestamp: {logDetails.timestamp}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  <b>Maker:</b>
-                  <Box
-                    component="pre"
-                    sx={{
-                      background: "#f5f5f5",
-                      p: 1,
-                      borderRadius: 1,
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      maxHeight: 120,
-                      overflow: "auto",
-                      mt: 0.5,
-                      mb: 1,
-                    }}
-                  >
-                    {logDetails.maker_comment || "-"}
-                  </Box>
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  <b>Checker:</b>
-                  <Box
-                    component="pre"
-                    sx={{
-                      background: "#f5f5f5",
-                      p: 1,
-                      borderRadius: 1,
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      maxHeight: 120,
-                      overflow: "auto",
-                      mt: 0.5,
-                      mb: 1,
-                    }}
-                  >
-                    {logDetails.checker_comment || "-"}
-                  </Box>
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Action: {logDetails.check_action}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  <b>Diff:</b>
-                  <pre
-                    style={{
-                      background: "#f5f5f5",
-                      padding: 8,
-                      borderRadius: 4,
-                      maxHeight: 300,
-                      overflow: "auto",
-                    }}
-                  >
-                    {logDetails.diff_text}
-                  </pre>
-                </Typography>
-              </Box>
-            )
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+              {JSON.stringify(logDetails, null, 2)}
+            </pre>
           ) : (
-            <Alert severity="info">Loading...</Alert>
+            <Alert severity="info">Loading log details...</Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSelectedLog(null)}>Close</Button>
-          {logDetails && !logDetails.error && (
-            <>
-              <Button
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(logDetails, null, 2)], {
-                    type: "application/json",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${logDetails.file_name || "audit-log"}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                Download JSON
-              </Button>
-              <Button
-                onClick={() => {
-                  // Sheet 1: metadata except diff_text
-                  const metaRows = [
-                    ["Field", "Value"],
-                    ["Project", logDetails.project_name],
-                    ["Environment", logDetails.environment],
-                    ["File", logDetails.file_name],
-                    ["Timestamp", logDetails.timestamp],
-                    ["Maker", logDetails.maker],
-                    ["Maker Comment", logDetails.maker_comment],
-                    ["Checker", logDetails.checker],
-                    ["Checker Comment", logDetails.checker_comment],
-                    ["Action", logDetails.check_action],
-                  ];
-                  // Sheet 2: split diff text into lines
-                  const diffLines = (logDetails.diff_text || "").split(/\r?\n/);
-                  const diffRows = diffLines.map((line: string) => [line]);
-                  const wb = XLSX.utils.book_new();
-                  const ws1 = XLSX.utils.aoa_to_sheet(metaRows);
-                  const ws2 = XLSX.utils.aoa_to_sheet(diffRows);
-                  XLSX.utils.book_append_sheet(wb, ws1, "Metadata");
-                  XLSX.utils.book_append_sheet(wb, ws2, "DiffText");
-                  XLSX.writeFile(
-                    wb,
-                    `${logDetails.file_name || "audit-log"}.xlsx`
-                  );
-                }}
-              >
-                Download Excel
-              </Button>
-            </>
-          )}
         </DialogActions>
       </Dialog>
     </Box>

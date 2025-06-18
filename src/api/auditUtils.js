@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { elasticClient, AUDIT_LOG_INDEX, ensureAuditLogIndex } from './elasticClient.js';
 
 /**
  * Write an audit log JSON file in the correct folder structure.
@@ -18,7 +19,7 @@ import path from 'path';
  * @param {number} params.auditRetentionDays
  * @param {Date} [params.timestamp] - Optional, defaults to now
  */
-function writeAuditLog({
+async function writeAuditLog({
   auditPath,
   auditCaptureApproach,
   projectName,
@@ -88,11 +89,14 @@ function writeAuditLog({
     } else {
       console.log('[AuditLog][DEBUG][BACKEND] File does not exist, will create:', filePath);
     }
+    // Prepare auditData for file and ElasticSearch
+    const nowIso = new Date().toISOString();
     const auditData = {
       project_name: projectName,
       environment,
       file_name: fileName,
-      timestamp: timestamp, // Store as received (local string)
+      timestamp: nowIso, // ISO for ElasticSearch
+      timestamp_display: timestamp, // Local string for UI
       maker,
       maker_comment: makerComment,
       checker,
@@ -103,6 +107,18 @@ function writeAuditLog({
     console.log('[AuditLog][DEBUG][BACKEND] Attempting to write audit log file:', filePath);
     fs.writeFileSync(filePath, JSON.stringify(auditData, null, 2));
     console.log('[AuditLog][DEBUG][BACKEND] Audit log file written successfully:', filePath);
+    // ElasticSearch indexing
+    try {
+      console.log('[AuditLog][DEBUG][BACKEND] Attempting to ensure index and index audit log in ElasticSearch:', auditData);
+      await ensureAuditLogIndex();
+      const esResult = await elasticClient.index({
+        index: AUDIT_LOG_INDEX,
+        document: auditData
+      });
+      console.log('[AuditLog][DEBUG][BACKEND] Audit log indexed in ElasticSearch. Result:', esResult);
+    } catch (esErr) {
+      console.error('[AuditLog][DEBUG][BACKEND] Failed to index audit log in ElasticSearch:', esErr);
+    }
     console.log('[AuditLog][DEBUG][BACKEND] Attempting to update audit index for:', fullAuditPath);
     updateAuditIndex(fullAuditPath, {
       file: path.relative(fullAuditPath, filePath),

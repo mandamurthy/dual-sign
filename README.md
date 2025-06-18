@@ -4,7 +4,7 @@ A modern, robust React-based web application for user onboarding, environment/pr
 
 ## Features
 
-### Completed (as of June 15, 2025)
+### Completed (as of June 18, 2025)
 
 - Project Scaffold: Vite + React + TypeScript.
 - Material-UI Integration: Modern, responsive UI.
@@ -26,11 +26,10 @@ A modern, robust React-based web application for user onboarding, environment/pr
 - **Download Fixes:** Download logic for V0 and versioned files in the Display Versions modal is unified and fixed. No hardcoded paths; all file operations use parameterized paths from onboarding/product config.
 - **Audit Log Local Time:** Audit log filenames now use local (Singapore) time, and the timestamp field in the log uses the local time string from the frontend.
 - **Granular Debug Logging:** Backend audit log creation now includes granular debug logging for every step, aiding troubleshooting and transparency.
+- **Audit Trail Pagination:** Audit Trail tab supports pagination and filtering for scalable log browsing.
 
 ## Pending / Next Steps
 
-- Pagination addition for Audit Trail tab.
-- Elastic search integration for scalable audit log search.
 - Access control for Audit tab and all sensitive actions.
 - Move away from local storage for all tabs (users, environments, projects, products, tasks, audit logs) to backend APIs.
 - Product path logic: allow unique path per product/project.
@@ -42,50 +41,6 @@ A modern, robust React-based web application for user onboarding, environment/pr
 
 ---
 
-_Last updated: June 15, 2025_
-
-# Dual Sign Maker-Checker Workflow
-
-## Status as of June 15, 2025
-
-### Completed Features
-
-- Maker-Checker workflow is robust and production-ready for file versioning, approval, and submission.
-- Maker can upload new versions, view diffs, send to Checker (with required comment), and drop approval.
-- Only one version can be under review at a time; UI disables actions as appropriate.
-- Checker tab displays all pending tasks, with a modern modal for review (View Diff, Download, Approve, Reject, Approve & Submit), and requires a comment for all actions.
-- Download button in Checker modal includes timestamp in filename.
-- Status and comments from Checker are shown in Maker's Display Versions modal, with modern UI.
-- Both Maker and Checker comments are visible in the workflow.
-- "Restore To Version" and "Replace" actions removed from Maker UI and code.
-- Product onboarding supports "Product Submit File Prefix" as a required field.
-- File pattern matching supports wildcards (e.g., *.csv, *City\*).
-- "Submit" button in Maker modal creates a file named Product+ProductSubmitFilePrefix.txt in the product path, enabled only when Checker action is Approved. After submit, button is renamed "SUBMITTED" and disabled.
-- After Checker approves, the approved version is written to the product file path before status is updated.
-- "Approve & Submit" in Checker modal performs both: replaces the file in the product path and creates the submit file, with full feedback.
-- Snackbar feedback is provided for all major Checker actions (Approve, Reject, Approve & Submit, View Diff), making the UI user-friendly for Checkers.
-- All UI/UX changes maintain modular, maintainable code structure.
-- Audit log diff text output now always uses encapsulated quotes, matching the original CSV quoting.
-- Audit Trail date filter defaults to today's date; user can clear for ALL or pick a specific date.
-- Codebase cleaned of unused variables and debug logic.
-- **Versioning:** All uploaded versions now use timestamp-based identifiers (VYYYYMMDDHHMMSS) instead of numeric (V1, V2, ...), with V0 reserved for the workspace. All version usage (DiffViewer, Audit Log, Display Versions modal, downloads, etc.) is consistent with the new format.
-- **Download Fixes:** Download logic for V0 and versioned files in the Display Versions modal is unified and fixed. No hardcoded paths; all file operations use parameterized paths from onboarding/product config.
-- **Audit Log Local Time:** Audit log filenames now use local (Singapore) time, and the timestamp field in the log uses the local time string from the frontend.
-- **Granular Debug Logging:** Backend audit log creation now includes granular debug logging for every step, aiding troubleshooting and transparency.
-
-### Pending / Next Steps
-
-- Pagination addition for Audit Trail tab.
-- Elastic search integration for scalable audit log search.
-- Access control for Audit tab and all sensitive actions.
-- Move away from local storage for all tabs (users, environments, projects, products, tasks, audit logs) to backend APIs.
-- Product path logic: allow unique path per product/project.
-- Further workflow automation and audit trail improvements as needed.
-- Add authentication and user session management.
-- Advanced validation, error handling, and accessibility improvements.
-- Further UI/UX refinements as needed.
-- Update documentation as new features are added.
-
----
+_Last updated: June 18, 2025_
 
 This README is up to date with the current state of the Maker-Checker workflow and UI. Use this as a reference for future development or memory recovery.

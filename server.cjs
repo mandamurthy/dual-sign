@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import { writeAuditLog, cleanupOldAuditLogs } from './src/api/auditUtils.js';
+const { elasticClient, AUDIT_LOG_INDEX } = require('./src/api/elasticClient.js');
 
 const app = express();
 app.use(cors());
@@ -100,6 +101,42 @@ app.post('/api/audit-log/cleanup', (req, res) => {
     res.send('Cleanup complete');
   } catch (err) {
     res.status(500).send('Cleanup failed: ' + err.message);
+  }
+});
+
+// GET /api/audit-logs - paginated, filterable audit log search via ElasticSearch
+app.get('/api/audit-logs', async (req, res) => {
+  try {
+    const {
+      page = 1,
+      pageSize = 20,
+      project,
+      file,
+      maker,
+      checker,
+      action,
+      date
+    } = req.query;
+    const must = [];
+    if (project) must.push({ term: { project_name: project } });
+    if (file) must.push({ wildcard: { file_name: `*${file}*` } });
+    if (maker) must.push({ term: { maker } });
+    if (checker) must.push({ term: { checker } });
+    if (action) must.push({ term: { check_action: action } });
+    if (date) must.push({ prefix: { timestamp: date } });
+    const esQuery = {
+      index: AUDIT_LOG_INDEX,
+      from: (parseInt(page) - 1) * parseInt(pageSize),
+      size: parseInt(pageSize),
+      sort: [{ timestamp: { order: 'desc' } }],
+      query: must.length ? { bool: { must } } : { match_all: {} }
+    };
+    const result = await elasticClient.search(esQuery);
+    const hits = result.hits.hits.map(h => h._source);
+    res.json({ total: result.hits.total.value, results: hits });
+  } catch (err) {
+    console.error('[AuditLog][DEBUG][BACKEND] /api/audit-logs error:', err);
+    res.status(500).send('ElasticSearch query failed: ' + err.message);
   }
 });
 

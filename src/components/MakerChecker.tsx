@@ -219,8 +219,8 @@ const Maker: React.FC = () => {
         return null;
       })
       .filter((v) => v !== null);
-    // Sort by version timestamp
-    found.sort((a, b) => a!.versionLabel.localeCompare(b!.versionLabel));
+    // Sort by version timestamp descending (latest first)
+    found.sort((a, b) => b!.versionLabel.localeCompare(a!.versionLabel));
     versions.push(...found);
     return versions;
   };
