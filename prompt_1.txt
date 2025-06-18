@@ -1,0 +1,3 @@
+What is the copilot model i am using now. Is it base or premium version. I need to make sure less premium requests are used while using the agent model. So, please be cautious and make me aware if any preimum requests will be changed.
+
+Also go through the README.me file and recover your memory on the latest status, pending tasks etc.
