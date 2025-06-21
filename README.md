@@ -1,3 +1,11 @@
+Rules to Github by Copilot :
+
+1. Do not execute premium request without taking the confirmation.
+2. Coding should be modular, wherever funcationlaity can be reusable do code in such a way.
+3. When recovering or fixing, always check the README.md for open issues and rules before proceeding.
+4. When migrating from localStorage to backend, ensure all CRUD, versioning, and UI flows are tested and match previous behavior.
+5. For any UI action (like View Diff), ensure the user experience matches or improves upon the previous implementation.
+
 # Dual Sign
 
 A modern, robust React-based web application for user onboarding, environment/project/product onboarding, and a Maker-Checker process, with full audit and role-based access. Built with Vite, React, TypeScript, and Material-UI. Data is persisted in localStorage for now.
@@ -33,6 +41,13 @@ A modern, robust React-based web application for user onboarding, environment/pr
 - Access control for Audit tab and all sensitive actions.
 - Move away from local storage for all tabs (users, environments, projects, products, tasks, audit logs) to backend APIs.
 - Product path logic: allow unique path per product/project.
+- **OPEN ISSUES (as of June 21, 2025):**
+  - [ ] View Diff link in snackbar after upload does not always appear or work as expected. Should always open the diff viewer for the latest version.
+  - [ ] Uploaded versions are not always displayed in the modal after upload. Modal should open and show the new version immediately.
+  - [ ] Ensure all versioning, diff, and download flows are fully migrated from localStorage to backend API, including for Checker and Audit tabs.
+  - [ ] Remove all remaining localStorage usage for tasks, checker flows, and any other state.
+  - [ ] Test and validate all Maker/Checker flows after backend migration, including edge cases and error handling.
+  - [ ] Document any UI/UX differences or regressions from the localStorage version for future recovery.
 - Further workflow automation and audit trail improvements as needed.
 - Add authentication and user session management.
 - Advanced validation, error handling, and accessibility improvements.
@@ -41,6 +56,6 @@ A modern, robust React-based web application for user onboarding, environment/pr
 
 ---
 
-_Last updated: June 18, 2025_
+_Last updated: June 21, 2025_
 
 This README is up to date with the current state of the Maker-Checker workflow and UI. Use this as a reference for future development or memory recovery.

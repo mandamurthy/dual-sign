@@ -14,8 +14,8 @@ address,number,predir,prequal,pretyp,street,suftyp,sufqual,sufdir,unittyp,unit,c
 "2400 W 3RD ST, WILLIAMSPORT PA 17701",240,W,,,3rd,St,,,,,Williamsport,PAA,17701,,,,
 "41 N 4TH ST, ALLENTOWN PA 18102",41,N,,,4th,St,,,,,Allentown,PA,18102,,,,
 "2221 W. MARKET STREET, POTTSVILLE PA 17901",2221,W,,,Market,St,,,,,Pottsville,PA,17901,,,,
-"337 BRIGHTSEAT ROAD, LANDOVER MD 20785",337,,,,Brightseat,Rd,,,,,Hyattsville,MD,20785,,,,"canonical place"
-"101 CHESAPEAKE BLVD, ELKTON MD 21921",103,,,,Chesapeake,Blvd,,,,,Elkton,MD,21921,,,,"find nearest corner"
+"337 BRIGHTSEAT ROAD, LANDOVER MD 20785",337,,,,Brightseat,Rd,,,,,Hyattsville,MD,20785,,,,"canonical placee"
+"101 CHESAPEAKE BLVD, ELKTON MD 21921",103,,,,Chesapeake,Blvd,,,,,Elkton,MDd,21921,,,,"find nearest corner"
 "2875 SABRE ST, VIRGINIA BEACH VA 23452",2809,,,,Sabre,St,,,,,"Virginia Beach",VA,23452,,,,"find nearest corner"
 "324 COMMERCE ROAD, FARMVILLE VA 23901",324,,,,Commerce,St,,,,,Clarksville,VA,23927,,,,"nearby address; might be TIGER omission"
 "1480 EAST MAIN STREET, WYTHEVILLE VA 24382",1480,W,,,Main,St,,,,,Wytheville,VA,24382,,,,"nearby address; TIGER omission"

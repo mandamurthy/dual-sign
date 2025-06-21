@@ -1,0 +1,11 @@
+[
+  {
+    "id": "dtcc-dev-eq-1",
+    "project": "DTCC | DEV",
+    "name": "ProductEquities",
+    "path": "DTCC_Rewrite\\Working\\EQUITIES\\CSV",
+    "pattern": "*.csv",
+    "submitPrefix": "_Done",
+    "auditMustColumns": "number|city"
+  }
+]

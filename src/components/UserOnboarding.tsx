@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,6 +19,8 @@ import {
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { getUsers, addUser, updateUser, deleteUser } from "../api/userApi";
+import { getEnvironments } from "../api/environmentApi";
 
 const roles = [
   "Admin",
@@ -31,56 +33,43 @@ const roles = [
 ];
 
 interface User {
+  id?: string;
   username: string;
   roles: { [env: string]: string };
 }
 
-// Helper to get environments from localStorage
-const getEnvs = () => {
-  try {
-    return JSON.parse(localStorage.getItem("dualSignEnvironments") || "[]");
-  } catch {
-    return [] as string[];
-  }
-};
+interface EnvObj {
+  id: string;
+  name: string;
+}
 
 const UserOnboarding: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(() => {
-    // Load users from localStorage on initial mount only
-    const stored = localStorage.getItem("dualSignUsers");
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [users, setUsers] = useState<User[]>([]);
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
-  const [environments, setEnvironments] = useState<string[]>(() => getEnvs());
-  const [selectedEnvs, setSelectedEnvs] = useState<string[]>([]);
-  const [envRoles, setEnvRoles] = useState<{ [env: string]: string }>({});
+  const [environments, setEnvironments] = useState<EnvObj[]>([]);
+  const [selectedEnvs, setSelectedEnvs] = useState<string[]>([]); // store selected env ids
+  const [envRoles, setEnvRoles] = useState<{ [envId: string]: string }>({});
   const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
 
-  // Save users to localStorage on change
-  React.useEffect(() => {
-    localStorage.setItem("dualSignUsers", JSON.stringify(users));
-  }, [users]);
-
-  // Keep environments in sync with localStorage changes (e.g., from EnvironmentOnboarding)
-  React.useEffect(() => {
-    const syncEnvs = () => setEnvironments(getEnvs());
-    window.addEventListener("storage", syncEnvs);
-    // Also poll localStorage on tab focus (for SPA navigation)
-    window.addEventListener("focus", syncEnvs);
-    return () => {
-      window.removeEventListener("storage", syncEnvs);
-      window.removeEventListener("focus", syncEnvs);
-    };
+  // Fetch users and environments from backend
+  useEffect(() => {
+    getUsers()
+      .then(setUsers)
+      .catch(() => setError("Failed to load users"));
+    getEnvironments()
+      .then(setEnvironments)
+      .catch(() => setError("Failed to load environments"));
   }, []);
 
-  const handleEnvToggle = (env: string) => {
+  const handleEnvToggle = (envId: string) => {
     setSelectedEnvs((prev) =>
-      prev.includes(env) ? prev.filter((e) => e !== env) : [...prev, env]
+      prev.includes(envId) ? prev.filter((e) => e !== envId) : [...prev, envId]
     );
   };
-  const handleEnvRoleChange = (env: string, role: string) => {
-    setEnvRoles((prev) => ({ ...prev, [env]: role }));
+  const handleEnvRoleChange = (envId: string, role: string) => {
+    setEnvRoles((prev) => ({ ...prev, [envId]: role }));
   };
 
   const handleEditUser = (idx: number) => {
@@ -89,19 +78,25 @@ const UserOnboarding: React.FC = () => {
     setSelectedEnvs(Object.keys(user.roles));
     setEnvRoles({ ...user.roles });
     setEditIdx(idx);
+    setEditId(user.id || null);
   };
 
-  const handleDeleteUser = (idx: number) => {
-    setUsers(users.filter((_, i) => i !== idx));
+  const handleDeleteUser = async (idx: number) => {
+    const user = users[idx];
+    if (user.id) {
+      await deleteUser(user.id);
+      setUsers(users.filter((_, i) => i !== idx));
+    }
     if (editIdx === idx) {
       setEditIdx(null);
+      setEditId(null);
       setUsername("");
       setSelectedEnvs([]);
       setEnvRoles({});
     }
   };
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
       setError("Username is required.");
@@ -122,17 +117,30 @@ const UserOnboarding: React.FC = () => {
       return;
     }
     // Build roles per environment
-    const userRoles: { [env: string]: string } = {};
-    selectedEnvs.forEach((env) => {
-      userRoles[env] = envRoles[env] || roles[0];
+    const userRoles: { [envId: string]: string } = {};
+    selectedEnvs.forEach((envId) => {
+      userRoles[envId] = envRoles[envId] || roles[0];
     });
-    if (editIdx !== null) {
+    if (editIdx !== null && editId) {
+      await updateUser(editId, { username: username.trim(), roles: userRoles });
       const updated = [...users];
-      updated[editIdx] = { username: username.trim(), roles: userRoles };
+      updated[editIdx] = {
+        ...updated[editIdx],
+        username: username.trim(),
+        roles: userRoles,
+      };
       setUsers(updated);
       setEditIdx(null);
+      setEditId(null);
     } else {
-      setUsers([...users, { username: username.trim(), roles: userRoles }]);
+      // Generate a simple id (in real app, backend should do this)
+      const newUser = {
+        id: Date.now().toString(),
+        username: username.trim(),
+        roles: userRoles,
+      };
+      await addUser(newUser);
+      setUsers([...users, newUser]);
     }
     setUsername("");
     setSelectedEnvs([]);
@@ -164,29 +172,31 @@ const UserOnboarding: React.FC = () => {
           </Typography>
           <List>
             {environments.map((env) => (
-              <ListItem key={env} dense divider>
+              <ListItem key={env.id} dense divider>
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
-                    checked={selectedEnvs.includes(env)}
-                    onChange={() => handleEnvToggle(env)}
+                    checked={selectedEnvs.includes(env.id)}
+                    onChange={() => handleEnvToggle(env.id)}
                     tabIndex={-1}
                     disableRipple
                   />
                 </ListItemIcon>
-                <ListItemText primary={env} />
+                <ListItemText primary={env.name} />
                 <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel id={`role-label-${env}`}>Role</InputLabel>
+                  <InputLabel id={`role-label-${env.id}`}>Role</InputLabel>
                   <Select
-                    labelId={`role-label-${env}`}
-                    value={envRoles[env] || roles[0]}
+                    labelId={`role-label-${env.id}`}
+                    value={envRoles[env.id] || roles[0]}
+                    onChange={(e) =>
+                      handleEnvRoleChange(env.id, e.target.value)
+                    }
                     label="Role"
-                    onChange={(e) => handleEnvRoleChange(env, e.target.value)}
-                    disabled={!selectedEnvs.includes(env)}
+                    disabled={!selectedEnvs.includes(env.id)}
                   >
-                    {roles.map((r) => (
-                      <MenuItem key={r} value={r}>
-                        {r}
+                    {roles.map((role) => (
+                      <MenuItem key={role} value={role}>
+                        {role}
                       </MenuItem>
                     ))}
                   </Select>
@@ -201,78 +211,46 @@ const UserOnboarding: React.FC = () => {
             {editIdx !== null && (
               <Button
                 variant="outlined"
-                color="secondary"
                 onClick={() => {
                   setEditIdx(null);
+                  setEditId(null);
                   setUsername("");
                   setSelectedEnvs([]);
                   setEnvRoles({});
                   setError("");
                 }}
               >
-                Cancel Update
+                Cancel
               </Button>
             )}
           </Box>
         </form>
       </Box>
       {/* User List */}
-      <Box
-        flex={1}
-        p={3}
-        component={Paper}
-        elevation={3}
-        minWidth={350}
-        maxWidth={450}
-      >
-        <Typography variant="h6" align="center" gutterBottom>
-          User List
+      <Box flex={1} p={3} component={Paper} elevation={3}>
+        <Typography variant="h5" align="center" gutterBottom>
+          Users
         </Typography>
         <List>
           {users.map((user, idx) => (
-            <ListItem
-              key={idx}
-              divider
-              alignItems="flex-start"
-              secondaryAction={
-                <Box>
-                  <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={() => handleEditUser(idx)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    color="error"
-                    onClick={() => handleDeleteUser(idx)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              }
-            >
-              <Box display="flex" flexDirection="column" width="100%">
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography fontWeight={600}>{user.username}</Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ wordBreak: "break-word", mt: 1 }}
-                >
-                  {Object.entries(user.roles)
-                    .map(([env, role]) => `${env}: ${role}`)
-                    .join(" | ")}
-                </Typography>
-              </Box>
+            <ListItem key={user.id || user.username} divider>
+              <ListItemText
+                primary={user.username}
+                secondary={Object.entries(user.roles)
+                  .map(([envId, role]) => {
+                    const envObj = environments.find((e) => e.id === envId);
+                    return envObj
+                      ? `${envObj.name}: ${role}`
+                      : `${envId}: ${role}`;
+                  })
+                  .join(", ")}
+              />
+              <IconButton onClick={() => handleEditUser(idx)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => handleDeleteUser(idx)}>
+                <DeleteIcon />
+              </IconButton>
             </ListItem>
           ))}
         </List>

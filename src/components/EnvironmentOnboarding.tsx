@@ -9,51 +9,36 @@ import {
   List,
   ListItem,
   ListItemText,
-  Stack,
 } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  getEnvironments,
+  addEnvironment,
+  updateEnvironment,
+  deleteEnvironment,
+} from "../api/environmentApi";
 
-const defaultEnvironments = ["Development", "SIT", "UAT", "DR", "Production"];
-
-const ENV_KEY = "dualSignEnvironments";
+interface EnvObj {
+  id: string;
+  name: string;
+}
 
 const EnvironmentOnboarding: React.FC = () => {
-  const [environments, setEnvironments] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("dualSignEnvironments") || "[]");
-    } catch {
-      return [] as string[];
-    }
-  });
+  const [environments, setEnvironments] = useState<EnvObj[]>([]);
   const [envName, setEnvName] = useState("");
   const [error, setError] = useState("");
   const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
 
   useEffect(() => {
-    const syncEnvs = () => {
-      try {
-        setEnvironments(
-          JSON.parse(localStorage.getItem("dualSignEnvironments") || "[]")
-        );
-      } catch {
-        setEnvironments([]);
-      }
-    };
-    window.addEventListener("storage", syncEnvs);
-    window.addEventListener("focus", syncEnvs);
-    return () => {
-      window.removeEventListener("storage", syncEnvs);
-      window.removeEventListener("focus", syncEnvs);
-    };
+    getEnvironments()
+      .then((envs) => setEnvironments(envs))
+      .catch(() => setError("Failed to load environments"));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(ENV_KEY, JSON.stringify(environments));
-  }, [environments]);
-
-  const handleAddOrEdit = (e: React.FormEvent) => {
+  const handleAddOrEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = envName.trim();
     if (!name) {
@@ -63,35 +48,45 @@ const EnvironmentOnboarding: React.FC = () => {
     if (
       environments.some(
         (env, idx) =>
-          env.toLowerCase() === name.toLowerCase() && idx !== editIdx
+          env.name.toLowerCase() === name.toLowerCase() && idx !== editIdx
       )
     ) {
       setError("Environment already exists.");
       return;
     }
-    if (editIdx !== null) {
+    if (editIdx !== null && editId) {
+      await updateEnvironment(editId, { name });
       const updated = [...environments];
-      updated[editIdx] = name;
+      updated[editIdx] = { ...updated[editIdx], name };
       setEnvironments(updated);
       setEditIdx(null);
+      setEditId(null);
     } else {
-      setEnvironments([...environments, name]);
+      const newEnv = { id: Date.now().toString(), name };
+      await addEnvironment(newEnv);
+      setEnvironments([...environments, newEnv]);
     }
     setEnvName("");
     setError("");
   };
 
   const handleEdit = (idx: number) => {
-    setEnvName(environments[idx]);
+    setEnvName(environments[idx].name);
     setEditIdx(idx);
+    setEditId(environments[idx].id);
     setError("");
   };
 
-  const handleDelete = (idx: number) => {
-    setEnvironments(environments.filter((_, i) => i !== idx));
+  const handleDelete = async (idx: number) => {
+    const env = environments[idx];
+    if (env.id) {
+      await deleteEnvironment(env.id);
+      setEnvironments(environments.filter((_, i) => i !== idx));
+    }
     setError("");
     if (editIdx === idx) {
       setEditIdx(null);
+      setEditId(null);
       setEnvName("");
     }
   };
@@ -119,46 +114,28 @@ const EnvironmentOnboarding: React.FC = () => {
           {editIdx !== null && (
             <Button
               variant="outlined"
-              color="secondary"
               onClick={() => {
                 setEditIdx(null);
+                setEditId(null);
                 setEnvName("");
                 setError("");
               }}
             >
-              Cancel Update
+              Cancel
             </Button>
           )}
         </Box>
       </form>
-      <Typography variant="h6" mt={4}>
-        Environment List
-      </Typography>
       <List>
         {environments.map((env, idx) => (
-          <ListItem
-            key={env}
-            divider
-            secondaryAction={
-              <Stack direction="row" spacing={1}>
-                <IconButton
-                  edge="end"
-                  aria-label="edit"
-                  onClick={() => handleEdit(idx)}
-                >
-                  <EditIcon />
-                </IconButton>
-                <IconButton
-                  edge="end"
-                  aria-label="delete"
-                  onClick={() => handleDelete(idx)}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Stack>
-            }
-          >
-            <ListItemText primary={env} />
+          <ListItem key={env.id} divider>
+            <ListItemText primary={env.name} />
+            <IconButton onClick={() => handleEdit(idx)}>
+              <EditIcon />
+            </IconButton>
+            <IconButton onClick={() => handleDelete(idx)}>
+              <DeleteIcon />
+            </IconButton>
           </ListItem>
         ))}
       </List>

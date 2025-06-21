@@ -10,7 +10,7 @@ import Sidebar from "./components/Sidebar";
 import UserOnboarding from "./components/UserOnboarding";
 import EnvironmentOnboarding from "./components/EnvironmentOnboarding";
 import ProjectOnboarding from "./components/ProjectOnboarding";
-import Maker from "./components/MakerChecker";
+import Maker from "./components/Maker";
 import Checker from "./components/Checker";
 import AuditTrail from "./components/AuditTrail";
 import "./App.css";

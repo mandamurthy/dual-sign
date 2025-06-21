@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,26 +19,46 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { getEnvironments } from "../api/environmentApi";
+import {
+  getProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+} from "../api/projectApi";
+import {
+  getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+} from "../api/productApi";
 
-// Helper to get environments and projects from localStorage
-const getEnvs = () => {
-  try {
-    return JSON.parse(localStorage.getItem("dualSignEnvironments") || "[]");
-  } catch {
-    return [] as string[];
-  }
-};
-const getProjects = () => {
-  try {
-    return JSON.parse(localStorage.getItem("dualSignProjects") || "[]");
-  } catch {
-    return [] as any[];
-  }
-};
+interface EnvObj {
+  id: string;
+  name: string;
+}
+interface ProjectObj {
+  id: string;
+  name: string;
+  environment: string;
+  auditPath: string;
+  auditCaptureApproach: string;
+  auditRetentionDays: number;
+  auditLogGranularity: string;
+}
+interface ProductObj {
+  id: string;
+  project: string;
+  name: string;
+  path: string;
+  pattern: string;
+  submitPrefix: string;
+  auditMustColumns: string;
+}
 
 const ProjectOnboarding: React.FC = () => {
-  const [projects, setProjects] = useState<any[]>(() => getProjects());
-  const [environments, setEnvironments] = useState<string[]>(() => getEnvs());
+  const [projects, setProjects] = useState<ProjectObj[]>([]);
+  const [environments, setEnvironments] = useState<EnvObj[]>([]);
   const [projectName, setProjectName] = useState("");
   const [projectEnv, setProjectEnv] = useState("");
   const [error, setError] = useState("");
@@ -47,12 +67,11 @@ const ProjectOnboarding: React.FC = () => {
   const [productPath, setProductPath] = useState("");
   const [productName, setProductName] = useState("");
   const [productSubmitPrefix, setProductSubmitPrefix] = useState("");
-  const [products, setProducts] = useState<any[]>(() => {
-    const stored = localStorage.getItem("dualSignProducts");
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [products, setProducts] = useState<ProductObj[]>([]);
   const [editProjectIdx, setEditProjectIdx] = useState<number | null>(null);
   const [editProductIdx, setEditProductIdx] = useState<number | null>(null);
+  const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [editProductId, setEditProductId] = useState<string | null>(null);
   const [auditPath, setAuditPath] = useState("");
   const [auditCaptureApproach, setAuditCaptureApproach] = useState("");
   const [auditRetentionDays, setAuditRetentionDays] = useState(14);
@@ -61,22 +80,21 @@ const ProjectOnboarding: React.FC = () => {
   const auditApproachOptions = ["Date", "ProductName"];
   const auditGranularityOptions = ["Diff Lines", "Diff Columns"];
 
-  // Sync environments and projects on storage/focus
-  React.useEffect(() => {
-    const sync = () => {
-      setEnvironments(getEnvs());
-      setProjects(getProjects());
-    };
-    window.addEventListener("storage", sync);
-    window.addEventListener("focus", sync);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("focus", sync);
-    };
+  // Fetch environments, projects, and products from backend
+  useEffect(() => {
+    getEnvironments()
+      .then(setEnvironments)
+      .catch(() => setError("Failed to load environments"));
+    getProjects()
+      .then(setProjects)
+      .catch(() => setError("Failed to load projects"));
+    getProducts()
+      .then(setProducts)
+      .catch(() => setError("Failed to load products"));
   }, []);
 
   // Project onboarding handler
-  const handleAddProject = (e: React.FormEvent) => {
+  const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectName.trim() || !projectEnv) {
       setError("Project name and environment are required.");
@@ -105,9 +123,18 @@ const ProjectOnboarding: React.FC = () => {
       setError("Project already exists for this environment.");
       return;
     }
-    if (editProjectIdx !== null) {
+    if (editProjectIdx !== null && editProjectId) {
+      await updateProject(editProjectId, {
+        name: projectName.trim(),
+        environment: projectEnv,
+        auditPath: auditPath.trim(),
+        auditCaptureApproach,
+        auditRetentionDays,
+        auditLogGranularity,
+      });
       const updated = [...projects];
       updated[editProjectIdx] = {
+        ...updated[editProjectIdx],
         name: projectName.trim(),
         environment: projectEnv,
         auditPath: auditPath.trim(),
@@ -116,22 +143,20 @@ const ProjectOnboarding: React.FC = () => {
         auditLogGranularity,
       };
       setProjects(updated);
-      localStorage.setItem("dualSignProjects", JSON.stringify(updated));
       setEditProjectIdx(null);
+      setEditProjectId(null);
     } else {
-      const newProjects = [
-        ...projects,
-        {
-          name: projectName.trim(),
-          environment: projectEnv,
-          auditPath: auditPath.trim(),
-          auditCaptureApproach,
-          auditRetentionDays,
-          auditLogGranularity,
-        },
-      ];
-      setProjects(newProjects);
-      localStorage.setItem("dualSignProjects", JSON.stringify(newProjects));
+      const newProject = {
+        id: Date.now().toString(),
+        name: projectName.trim(),
+        environment: projectEnv,
+        auditPath: auditPath.trim(),
+        auditCaptureApproach,
+        auditRetentionDays,
+        auditLogGranularity,
+      };
+      await addProject(newProject);
+      setProjects([...projects, newProject]);
     }
     setProjectName("");
     setProjectEnv("");
@@ -149,28 +174,30 @@ const ProjectOnboarding: React.FC = () => {
     setAuditRetentionDays(projects[idx].auditRetentionDays || 14);
     setAuditLogGranularity(projects[idx].auditLogGranularity || "");
     setEditProjectIdx(idx);
+    setEditProjectId(projects[idx].id);
     setError("");
   };
-  const handleDeleteProject = (idx: number) => {
-    const updated = projects.filter((_, i) => i !== idx);
-    setProjects(updated);
-    localStorage.setItem("dualSignProjects", JSON.stringify(updated));
+  const handleDeleteProject = async (idx: number) => {
+    const project = projects[idx];
+    if (project.id) {
+      await deleteProject(project.id);
+      setProjects(projects.filter((_, i) => i !== idx));
+    }
     // Remove products belonging to this project
     const updatedProducts = products.filter(
-      (prod) =>
-        prod.project !== projects[idx].name + " | " + projects[idx].environment
+      (prod) => prod.project !== project.name + " | " + project.environment
     );
     setProducts(updatedProducts);
-    localStorage.setItem("dualSignProducts", JSON.stringify(updatedProducts));
     if (editProjectIdx === idx) {
       setEditProjectIdx(null);
+      setEditProjectId(null);
       setProjectName("");
       setProjectEnv("");
     }
   };
 
   // Product onboarding handler
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
       !productProject ||
@@ -193,9 +220,18 @@ const ProjectOnboarding: React.FC = () => {
       setError("Product already exists for this project.");
       return;
     }
-    if (editProductIdx !== null) {
+    if (editProductIdx !== null && editProductId) {
+      await updateProduct(editProductId, {
+        project: productProject,
+        name: productName.trim(),
+        path: productPath.trim(),
+        pattern: productPattern.trim(),
+        submitPrefix: productSubmitPrefix.trim(),
+        auditMustColumns: auditMustColumns.trim(),
+      });
       const updated = [...products];
       updated[editProductIdx] = {
+        ...updated[editProductIdx],
         project: productProject,
         name: productName.trim(),
         path: productPath.trim(),
@@ -204,22 +240,20 @@ const ProjectOnboarding: React.FC = () => {
         auditMustColumns: auditMustColumns.trim(),
       };
       setProducts(updated);
-      localStorage.setItem("dualSignProducts", JSON.stringify(updated));
       setEditProductIdx(null);
+      setEditProductId(null);
     } else {
-      const newProducts = [
-        ...products,
-        {
-          project: productProject,
-          name: productName.trim(),
-          path: productPath.trim(),
-          pattern: productPattern.trim(),
-          submitPrefix: productSubmitPrefix.trim(),
-          auditMustColumns: auditMustColumns.trim(),
-        },
-      ];
-      setProducts(newProducts);
-      localStorage.setItem("dualSignProducts", JSON.stringify(newProducts));
+      const newProduct = {
+        id: Date.now().toString(),
+        project: productProject,
+        name: productName.trim(),
+        path: productPath.trim(),
+        pattern: productPattern.trim(),
+        submitPrefix: productSubmitPrefix.trim(),
+        auditMustColumns: auditMustColumns.trim(),
+      };
+      await addProduct(newProduct);
+      setProducts([...products, newProduct]);
     }
     setProductProject("");
     setProductName("");
@@ -239,20 +273,25 @@ const ProjectOnboarding: React.FC = () => {
     setProductSubmitPrefix(prod.submitPrefix || "");
     setAuditMustColumns(prod.auditMustColumns || "");
     setEditProductIdx(idx);
+    setEditProductId(prod.id);
     setError("");
   };
 
-  const handleDeleteProduct = (idx: number) => {
-    const updated = products.filter((_, i) => i !== idx);
-    setProducts(updated);
-    localStorage.setItem("dualSignProducts", JSON.stringify(updated));
+  const handleDeleteProduct = async (idx: number) => {
+    const prod = products[idx];
+    if (prod.id) {
+      await deleteProduct(prod.id);
+      setProducts(products.filter((_, i) => i !== idx));
+    }
     if (editProductIdx === idx) {
       setEditProductIdx(null);
+      setEditProductId(null);
       setProductProject("");
       setProductName("");
       setProductPath("");
       setProductPattern("");
       setProductSubmitPrefix("");
+      setAuditMustColumns("");
     }
   };
 
@@ -310,11 +349,11 @@ const ProjectOnboarding: React.FC = () => {
             >
               {environments.map((env) => (
                 <MenuItem
-                  key={env}
-                  value={env}
+                  key={env.id}
+                  value={env.name}
                   style={{ whiteSpace: "normal" }}
                 >
-                  {env}
+                  {env.name}
                 </MenuItem>
               ))}
             </Select>
@@ -439,13 +478,14 @@ const ProjectOnboarding: React.FC = () => {
                   primary={null}
                   secondary={
                     <>
-                      <div>Environment: {proj.environment}</div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
+                      <Box component="span" display="block">
+                        Environment: {proj.environment}
+                      </Box>
+                      <Box
+                        component="span"
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
                       >
                         Audit Path:{" "}
                         <a
@@ -468,17 +508,17 @@ const ProjectOnboarding: React.FC = () => {
                         >
                           <ContentCopyIcon fontSize="small" />
                         </Button>
-                      </div>
-                      <div>
+                      </Box>
+                      <Box component="span" display="block">
                         Audit Capture: {proj.auditCaptureApproach || "-"}
-                      </div>
-                      <div>
+                      </Box>
+                      <Box component="span" display="block">
                         Audit Retention Days: {proj.auditRetentionDays || 14}{" "}
                         days
-                      </div>
-                      <div>
+                      </Box>
+                      <Box component="span" display="block">
                         Audit Log Granularity: {proj.auditLogGranularity || "-"}
-                      </div>
+                      </Box>
                     </>
                   }
                   sx={{ pr: 2 }}
@@ -526,7 +566,7 @@ const ProjectOnboarding: React.FC = () => {
             >
               {projects.map((proj) => (
                 <MenuItem
-                  key={proj.name + "-" + proj.environment}
+                  key={proj.id}
                   value={proj.name + " | " + proj.environment}
                   style={{ whiteSpace: "normal" }}
                 >

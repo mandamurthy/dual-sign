@@ -163,6 +163,284 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
+// --- User API ---
+
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+const ENVS_FILE = path.join(process.cwd(), 'data', 'environments.json');
+
+// Get all users
+app.get('/api/users', (req, res) => {
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    res.json(users);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read users' });
+  }
+});
+
+// Add a user
+app.post('/api/users', (req, res) => {
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const newUser = req.body;
+    users.push(newUser);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    res.status(201).json({ message: 'User added' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to add user' });
+  }
+});
+
+// Update a user
+app.put('/api/users/:id', (req, res) => {
+  try {
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const idx = users.findIndex(u => u.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'User not found' });
+    users[idx] = { ...users[idx], ...req.body };
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    res.json({ message: 'User updated' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Delete a user
+app.delete('/api/users/:id', (req, res) => {
+  try {
+    let users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const idx = users.findIndex(u => u.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'User not found' });
+    users.splice(idx, 1);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    res.json({ message: 'User deleted' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// --- Environment API ---
+// Get all environments
+app.get('/api/environments', (req, res) => {
+  try {
+    const envs = JSON.parse(fs.readFileSync(ENVS_FILE, 'utf8'));
+    res.json(envs);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read environments' });
+  }
+});
+
+// Add an environment
+app.post('/api/environments', (req, res) => {
+  try {
+    const envs = JSON.parse(fs.readFileSync(ENVS_FILE, 'utf8'));
+    const newEnv = req.body;
+    envs.push(newEnv);
+    fs.writeFileSync(ENVS_FILE, JSON.stringify(envs, null, 2));
+    res.status(201).json({ message: 'Environment added' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to add environment' });
+  }
+});
+
+// Update an environment
+app.put('/api/environments/:id', (req, res) => {
+  try {
+    const envs = JSON.parse(fs.readFileSync(ENVS_FILE, 'utf8'));
+    const idx = envs.findIndex(e => e.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Environment not found' });
+    envs[idx] = { ...envs[idx], ...req.body };
+    fs.writeFileSync(ENVS_FILE, JSON.stringify(envs, null, 2));
+    res.json({ message: 'Environment updated' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update environment' });
+  }
+});
+
+// Delete an environment
+app.delete('/api/environments/:id', (req, res) => {
+  try {
+    let envs = JSON.parse(fs.readFileSync(ENVS_FILE, 'utf8'));
+    const idx = envs.findIndex(e => e.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Environment not found' });
+    envs.splice(idx, 1);
+    fs.writeFileSync(ENVS_FILE, JSON.stringify(envs, null, 2));
+    res.json({ message: 'Environment deleted' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete environment' });
+  }
+});
+
+// --- Project API ---
+const PROJECTS_FILE = path.join(process.cwd(), 'data', 'projects.json');
+const PRODUCTS_FILE = path.join(process.cwd(), 'data', 'products.json');
+
+// Get all projects
+app.get('/api/projects', (req, res) => {
+  try {
+    const projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
+    res.json(projects);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read projects' });
+  }
+});
+
+// Add a project
+app.post('/api/projects', (req, res) => {
+  try {
+    const projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
+    const newProject = req.body;
+    projects.push(newProject);
+    fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
+    res.status(201).json({ message: 'Project added' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to add project' });
+  }
+});
+
+// Update a project
+app.put('/api/projects/:id', (req, res) => {
+  try {
+    const projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
+    const idx = projects.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Project not found' });
+    projects[idx] = { ...projects[idx], ...req.body };
+    fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
+    res.json({ message: 'Project updated' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update project' });
+  }
+});
+
+// Delete a project
+app.delete('/api/projects/:id', (req, res) => {
+  try {
+    let projects = JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf8'));
+    const idx = projects.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Project not found' });
+    projects.splice(idx, 1);
+    fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2));
+    res.json({ message: 'Project deleted' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+// --- Product API ---
+// Get all products
+app.get('/api/products', (req, res) => {
+  try {
+    const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+    res.json(products);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read products' });
+  }
+});
+
+// Add a product
+app.post('/api/products', (req, res) => {
+  try {
+    const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+    const newProduct = req.body;
+    products.push(newProduct);
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
+    res.status(201).json({ message: 'Product added' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to add product' });
+  }
+});
+
+// Update a product
+app.put('/api/products/:id', (req, res) => {
+  try {
+    const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+    const idx = products.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Product not found' });
+    products[idx] = { ...products[idx], ...req.body };
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
+    res.json({ message: 'Product updated' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// Delete a product
+app.delete('/api/products/:id', (req, res) => {
+  try {
+    let products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+    const idx = products.findIndex(p => p.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Product not found' });
+    products.splice(idx, 1);
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2));
+    res.json({ message: 'Product deleted' });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// List files in a directory (non-recursive)
+app.get('/api/list-files', (req, res) => {
+  const relDir = req.query.dir;
+  if (!relDir) return res.status(400).send('Missing dir');
+  const absDir = path.join(BASE_DIR, relDir);
+  if (!absDir.startsWith(BASE_DIR)) return res.status(403).send('Forbidden');
+  fs.readdir(absDir, (err, files) => {
+    if (err) return res.status(404).send('Directory not found');
+    // Only return files, not directories
+    const fileList = files.filter(f => {
+      try {
+        return fs.statSync(path.join(absDir, f)).isFile();
+      } catch {
+        return false;
+      }
+    });
+    res.json(fileList);
+  });
+});
+
+// List all versions of a file (v0 and versioned files)
+app.get('/api/list-versions', (req, res) => {
+  const relFile = req.query.file;
+  if (!relFile) return res.status(400).send('Missing file');
+  const absFile = path.join(BASE_DIR, relFile);
+  if (!absFile.startsWith(BASE_DIR)) return res.status(403).send('Forbidden');
+  const dir = path.dirname(absFile);
+  const base = path.basename(relFile);
+  fs.readdir(dir, (err, files) => {
+    if (err) return res.status(404).send('Directory not found');
+    // v0 (workspace file)
+    const versions = [];
+    if (fs.existsSync(absFile)) {
+      const stat = fs.statSync(absFile);
+      versions.push({
+        versionLabel: 'V0 (Workspace)',
+        uploadedAt: stat.mtime,
+        status: 'Current',
+        isCurrent: true,
+        file: relFile
+      });
+    }
+    // Find all versioned files (e.g., base.20240615T123456.diff.json)
+    const versionRegex = new RegExp(`^${base.replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")}\\.(\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z)\\.diff\\.json$`);
+    files.forEach(f => {
+      const m = f.match(versionRegex);
+      if (m) {
+        const stat = fs.statSync(path.join(dir, f));
+        versions.push({
+          versionLabel: `V${m[1]}`,
+          uploadedAt: stat.mtime,
+          status: 'Pending',
+          isCurrent: false,
+          file: path.join(path.dirname(relFile), f).replace(/\\/g, '/')
+        });
+      }
+    });
+    // Sort by versionLabel descending (latest first)
+    versions.sort((a, b) => (b.versionLabel || '').localeCompare(a.versionLabel || ''));
+    res.json(versions);
+  });
+});
+
 // Catch-all unmatched route debug logger
 app.use((req, res) => {
   console.log('[DEBUG] Unmatched route:', req.method, req.url);

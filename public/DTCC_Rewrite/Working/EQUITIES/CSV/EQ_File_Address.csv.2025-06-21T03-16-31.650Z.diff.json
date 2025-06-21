@@ -1,5 +1,5 @@
 address,number,predir,prequal,pretyp,street,suftyp,sufqual,sufdir,unittyp,unit,city,state,zip,lon,lat,count,comment
-"93 NORTH 9TH STREET, BROOKLYN NY 11211",93,N,,,9th,St,,,,,Brooklyn,NYY,11211,,,,
+"93 NORTH 9TH STREET, BROOKLYN NY 11211",93,N,,,9th,St,,,,,Brooklyn,NY,11211,,,,
 "380 WESTMINSTER ST, PROVIDENCE RI 02903",380,,,,Westminster,St,,,,,Providence,RI,02903,,,,
 "177 MAIN STREET, LITTLETON NH 03561",177,,,,Main,St,,,,,Littleton,NH,03561,,,,
 "202 HARLOW ST, BANGOR ME 04401",202,,,,Harlow,St,,,,,Bangor,ME,04401,,,,
@@ -11,7 +11,7 @@ address,number,predir,prequal,pretyp,street,suftyp,sufqual,sufdir,unittyp,unit,c
 "520 5TH AVE, MCKEESPORT PA 15132",520,,,,5th,Ave,,,,,McKeesport,PA,15132,,,,
 "122 W 3RD STREET, GREENSBURG PA 15601",122,W,,,3rd,St,,,,,Greensburg,PA,15601,,,,
 "901 UNIVERSITY DR, STATE COLLEGE PA 16801",901,,,,University,Dr,,,,,"State College",PA,16801,,,,
-"2400 W 3RD ST, WILLIAMSPORT PA 17701",240,W,,,3rd,St,,,,,Williamsport,PAA,17701,,,,
+"240 W 3RD ST, WILLIAMSPORT PA 17701",240,W,,,3rd,St,,,,,Williamsport,PA,17701,,,,
 "41 N 4TH ST, ALLENTOWN PA 18102",41,N,,,4th,St,,,,,Allentown,PA,18102,,,,
 "2221 W. MARKET STREET, POTTSVILLE PA 17901",2221,W,,,Market,St,,,,,Pottsville,PA,17901,,,,
 "337 BRIGHTSEAT ROAD, LANDOVER MD 20785",337,,,,Brightseat,Rd,,,,,Hyattsville,MD,20785,,,,"canonical place"

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "dtcc-dev-1",
+    "name": "DTCC",
+    "environment": "DEV",
+    "auditPath": "DTCC_Rewrite\\Audit",
+    "auditCaptureApproach": "ProductName",
+    "auditRetentionDays": 14,
+    "auditLogGranularity": "Diff Lines"
+  }
+]

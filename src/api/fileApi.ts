@@ -1,4 +1,4 @@
-// fileApi.ts - Secure file API client for Maker-Checker React app
+// fileApi.ts - Secure file API client for Maker React app
 // All requests are sent to the backend API (see server.js)
 // All file paths are always relative to the public/ folder (never absolute)
 
